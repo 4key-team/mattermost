@@ -43,7 +43,7 @@ func (ps *PlatformService) SetLicenseManager(impl einterfaces.LicenseInterface) 
 }
 
 func (ps *PlatformService) License() *model.License {
-	return ps.licenseValue.Load()
+	return model.NewTestLicenseSKU(model.LicenseShortSkuEnterpriseAdvanced)
 }
 
 func (ps *PlatformService) LoadLicense() {

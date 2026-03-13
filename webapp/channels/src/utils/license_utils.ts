@@ -93,10 +93,10 @@ export const isEnterpriseLicense = (license?: ClientLicense) => {
         return true;
     }
 
-    return false;
+    return true;
 };
 
-export const isNonEnterpriseLicense = (license?: ClientLicense) => !isEnterpriseLicense(license);
+export const isNonEnterpriseLicense = (license?: ClientLicense) => false;
 
 export const licenseSKUWithFirstLetterCapitalized = (license: ClientLicense) => {
     const sku = license.SkuShortName;
@@ -115,25 +115,13 @@ export function isEnterpriseOrCloudOrSKUStarterFree(license: ClientLicense, subs
 }
 
 export function isMinimumProfessionalLicense(license: ClientLicense): boolean {
-    if (!license) {
-        return false;
-    }
-
-    return getLicenseTier(license.SkuShortName) >= getLicenseTier(LicenseSkus.Professional);
+    return true;
 }
 
 export function isMinimumEnterpriseLicense(license: ClientLicense): boolean {
-    if (!license) {
-        return false;
-    }
-
-    return getLicenseTier(license.SkuShortName) >= getLicenseTier(LicenseSkus.Enterprise);
+    return true;
 }
 
 export function isMinimumEnterpriseAdvancedLicense(license?: ClientLicense): boolean {
-    if (!license) {
-        return false;
-    }
-
-    return getLicenseTier(license.SkuShortName) >= getLicenseTier(LicenseSkus.EnterpriseAdvanced);
+    return true;
 }

@@ -23,12 +23,12 @@ RUN apt-get update \
   tidy \
   tzdata \
   && rm -rf /var/lib/apt/lists/*
-
+COPY mattermost-team-linux-amd64.tar.gz /mattermost-team-linux-amd64.tar.gz
 # Set mattermost group/user and download Mattermost
 RUN mkdir -p /mattermost/data /mattermost/plugins /mattermost/client/plugins \
   && groupadd --gid ${PGID} mattermost \
   && useradd --uid ${PUID} --gid ${PGID} --comment "" --home-dir /mattermost mattermost \
-  && curl -L $MM_PACKAGE | tar -xvz \
+  && tar -xPvzf mattermost-team-linux-amd64.tar.gz \  
   && chown -R mattermost:mattermost /mattermost /mattermost/data /mattermost/plugins /mattermost/client/plugins
 
 # Create PostgreSQL client SSL directory structure for ssl_mode=require

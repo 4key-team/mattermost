@@ -247,10 +247,7 @@ const AdminDefinition: AdminDefinitionType = {
             />
         ),
         sectionTitle: defineMessage({id: 'admin.sidebar.about', defaultMessage: 'About'}),
-        isHidden: it.any(
-            it.configIsTrue('ExperimentalSettings', 'RestrictSystemAdmin'),
-            it.not(it.userHasReadPermissionOnSomeResources(RESOURCE_KEYS.ABOUT)),
-        ),
+        isHidden: true,
         subsections: {
             license: {
                 url: 'about/license',
@@ -273,7 +270,7 @@ const AdminDefinition: AdminDefinitionType = {
             />
         ),
         sectionTitle: defineMessage({id: 'admin.sidebar.billing', defaultMessage: 'Billing & Account'}),
-        isHidden: it.not(it.licensedForFeature('Cloud')),
+        isHidden: true,
         subsections: {
             subscription: {
                 url: 'billing/subscription',
