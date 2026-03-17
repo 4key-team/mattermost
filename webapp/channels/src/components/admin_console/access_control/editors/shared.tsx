@@ -54,19 +54,14 @@ export const OPERATOR_CONFIG: Record<string, {type: OperatorType; celOp: CELOper
 };
 
 // Checks if there are any usable attributes for ABAC policies.
-// An attribute is usable if:
-// 1. It doesn't contain spaces (CEL incompatible)
-// 2. It's either synced from LDAP/SAML, admin-managed, OR user-managed attributes are enabled
+// An attribute is usable if it doesn't contain spaces (CEL incompatible).
 export function hasUsableAttributes(
     userAttributes: UserPropertyField[],
-    enableUserManagedAttributes: boolean,
+    _enableUserManagedAttributes: boolean,
 ): boolean {
     return userAttributes.some((attr) => {
         const hasSpaces = attr.name.includes(' ');
-        const isSynced = attr.attrs?.ldap || attr.attrs?.saml;
-        const isAdminManaged = attr.attrs?.managed === 'admin';
-        const allowed = isSynced || isAdminManaged || enableUserManagedAttributes;
-        return !hasSpaces && allowed;
+        return !hasSpaces;
     });
 }
 

@@ -40,18 +40,14 @@ interface TableEditorProps {
 }
 
 // Finds the first available (non-disabled) attribute from a list of user attributes.
-// An attribute is considered available if it doesn't have spaces in its name (CEL incompatible)
-// and is considered "safe" (synced from LDAP/SAML, admin-managed, OR enableUserManagedAttributes is true).
+// An attribute is considered available if it doesn't have spaces in its name (CEL incompatible).
 export const findFirstAvailableAttributeFromList = (
     userAttributes: UserPropertyField[],
-    enableUserManagedAttributes: boolean,
+    _enableUserManagedAttributes: boolean,
 ): UserPropertyField | undefined => {
     return userAttributes.find((attr) => {
         const hasSpaces = attr.name.includes(' ');
-        const isSynced = attr.attrs?.ldap || attr.attrs?.saml;
-        const isAdminManaged = attr.attrs?.managed === 'admin';
-        const allowed = isSynced || isAdminManaged || enableUserManagedAttributes;
-        return !hasSpaces && allowed;
+        return !hasSpaces;
     });
 };
 

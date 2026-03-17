@@ -99,6 +99,10 @@ func newSqlRoleStore(sqlStore *SqlStore) store.RoleStore {
 func (s *SqlRoleStore) Save(role *model.Role) (_ *model.Role, err error) {
 	// Check the role is valid before proceeding.
 	if !role.IsValidWithoutId() {
+		invalidPermissions := role.InvalidPermissions()
+		if len(invalidPermissions) > 0 {
+			return nil, store.NewErrInvalidInput("Role", "<any>", fmt.Sprintf("invalid permissions: %s", strings.Join(invalidPermissions, ", ")))
+		}
 		return nil, store.NewErrInvalidInput("Role", "<any>", fmt.Sprintf("%v", role))
 	}
 

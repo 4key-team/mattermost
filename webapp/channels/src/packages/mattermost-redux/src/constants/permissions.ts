@@ -124,7 +124,7 @@ const values = {
     SYSCONSOLE_READ_REPORTING_SITE_STATISTICS: 'sysconsole_read_reporting_site_statistics',
     SYSCONSOLE_WRITE_REPORTING_SITE_STATISTICS: 'sysconsole_write_reporting_site_statistics',
     SYSCONSOLE_READ_REPORTING_TEAM_STATISTICS: 'sysconsole_read_reporting_team_statistics',
-    SYSCONSOLE_WRITE_REPORTING_TEAM_STATISTICS: 'sysconsole_write_reporting_statistics',
+    SYSCONSOLE_WRITE_REPORTING_TEAM_STATISTICS: 'sysconsole_write_reporting_team_statistics',
     SYSCONSOLE_READ_REPORTING_SERVER_LOGS: 'sysconsole_read_reporting_server_logs',
     SYSCONSOLE_WRITE_REPORTING_SERVER_LOGS: 'sysconsole_write_reporting_server_logs',
     SYSCONSOLE_READ_USERMANAGEMENT_USERS: 'sysconsole_read_user_management_users',

@@ -257,7 +257,7 @@ describe('hasUsableAttributes', () => {
         expect(hasUsableAttributes(userAttributes, false)).toBe(true);
     });
 
-    test('should return false when attributes exist but are not usable (not LDAP/SAML/admin and EnableUserManagedAttributes is false)', () => {
+    test('should return true when plain custom attributes exist', () => {
         const userAttributes: UserPropertyField[] = [
             {
                 id: 'attr1',
@@ -275,7 +275,7 @@ describe('hasUsableAttributes', () => {
             },
         ];
 
-        expect(hasUsableAttributes(userAttributes, false)).toBe(false);
+        expect(hasUsableAttributes(userAttributes, false)).toBe(true);
     });
 
     test('should return false when no attributes exist', () => {

@@ -85,6 +85,8 @@ func (a *App) CreateOrUpdateAccessControlPolicy(rctx request.CTX, policy *model.
 		return nil, appErr
 	}
 
+	a.maybeTriggerAccessControlSync(rctx, policy)
+
 	return policy, nil
 }
 
@@ -184,6 +186,7 @@ func (a *App) AssignAccessControlPolicyToChannels(rctx request.CTX, parentID str
 		if appErr != nil {
 			return nil, appErr
 		}
+		a.maybeTriggerAccessControlSync(rctx, child)
 		policies = append(policies, child)
 	}
 
@@ -312,7 +315,125 @@ func (a *App) UpdateAccessControlPoliciesActive(rctx request.CTX, updates []mode
 	if err != nil {
 		return nil, model.NewAppError("UpdateAccessControlPoliciesActive", "app.pap.update_access_control_policies_active.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
+	for _, policy := range policies {
+		a.maybeTriggerAccessControlSync(rctx, policy)
+	}
 	return policies, nil
+}
+
+func (a *App) maybeTriggerAccessControlSync(rctx request.CTX, policy *model.AccessControlPolicy) {
+	if policy == nil || !policy.Active || policy.Type != model.AccessControlPolicyTypeChannel {
+		return
+	}
+
+	if len(policy.Rules) == 0 && len(policy.Imports) == 0 {
+		return
+	}
+
+	if _, appErr := a.CreateAccessControlSyncJob(rctx, map[string]string{"policy_id": policy.ID}); appErr != nil {
+		rctx.Logger().Warn("Failed to create access control sync job",
+			mlog.String("policy_id", policy.ID),
+			mlog.Err(appErr),
+		)
+	}
+}
+
+func (a *App) triggerAllActiveChannelAccessControlSyncs(rctx request.CTX) {
+	policies, _, err := a.Srv().Store().AccessControlPolicy().SearchPolicies(rctx, model.AccessControlPolicySearch{
+		Type:   model.AccessControlPolicyTypeChannel,
+		Active: true,
+		Limit:  1000,
+	})
+	if err != nil {
+		rctx.Logger().Warn("Failed to search active access control policies", mlog.Err(err))
+		return
+	}
+
+	for _, policy := range policies {
+		a.maybeTriggerAccessControlSync(rctx, policy)
+	}
+}
+
+func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID string) *model.AppError {
+	channel, err := a.Srv().Store().Channel().Get(channelID, true)
+	if err != nil {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "", http.StatusInternalServerError).Wrap(err)
+	}
+
+	acs := a.Srv().Channels().AccessControl
+	if acs == nil {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "Policy Administration Point is not initialized", http.StatusNotImplemented)
+	}
+
+	cursor := ""
+	for {
+		users, _, appErr := acs.QueryUsersForResource(rctx, channel.Id, "*", model.SubjectSearchOptions{
+			TeamID:                channel.TeamId,
+			ExcludeChannelMembers: channel.Id,
+			Limit:                 200,
+			Cursor: model.SubjectCursor{
+				TargetID: cursor,
+			},
+		})
+		if appErr != nil {
+			return appErr
+		}
+		if len(users) == 0 {
+			break
+		}
+
+		for _, user := range users {
+			if _, appErr := a.AddUserToChannel(rctx, user, channel, false); appErr != nil {
+				rctx.Logger().Warn("Failed to auto-add user to access-controlled channel",
+					mlog.String("channel_id", channel.Id),
+					mlog.String("user_id", user.Id),
+					mlog.Err(appErr),
+				)
+			}
+		}
+
+		cursor = users[len(users)-1].Id
+		if len(users) < 200 {
+			break
+		}
+	}
+
+	members, appErr := acs.GetChannelMembersToRemove(rctx, channel.Id)
+	if appErr != nil {
+		return appErr
+	}
+	for _, member := range members {
+		if removeErr := a.RemoveUserFromChannel(rctx, member.UserId, "", channel); removeErr != nil {
+			rctx.Logger().Warn("Failed to auto-remove user from access-controlled channel",
+				mlog.String("channel_id", channel.Id),
+				mlog.String("user_id", member.UserId),
+				mlog.Err(removeErr),
+			)
+		}
+	}
+
+	return nil
+}
+
+func (a *App) syncAllActiveChannelAccessControlPolicies(rctx request.CTX) {
+	policies, _, err := a.Srv().Store().AccessControlPolicy().SearchPolicies(rctx, model.AccessControlPolicySearch{
+		Type:   model.AccessControlPolicyTypeChannel,
+		Active: true,
+		Limit:  1000,
+	})
+	if err != nil {
+		rctx.Logger().Warn("Failed to search active access control policies", mlog.Err(err))
+		return
+	}
+
+	for _, policy := range policies {
+		if appErr := a.SyncAccessControlledChannelMembers(rctx, policy.ID); appErr != nil {
+			rctx.Logger().Warn("Failed to sync access-controlled channel members",
+				mlog.String("policy_id", policy.ID),
+				mlog.Err(appErr),
+			)
+		}
+	}
 }
 
 func (a *App) ExpressionToVisualAST(rctx request.CTX, expression string) (*model.VisualExpression, *model.AppError) {

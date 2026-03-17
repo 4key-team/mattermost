@@ -784,6 +784,12 @@ func (r *Role) IsValidWithoutId() bool {
 		return false
 	}
 
+	return len(r.InvalidPermissions()) == 0
+}
+
+func (r *Role) InvalidPermissions() []string {
+	invalidPermissions := []string{}
+
 	check := func(perms []*Permission, permission string) bool {
 		for _, p := range perms {
 			if permission == p.Id {
@@ -792,14 +798,15 @@ func (r *Role) IsValidWithoutId() bool {
 		}
 		return false
 	}
+
 	for _, permission := range r.Permissions {
 		permissionValidated := check(AllPermissions, permission) || check(DeprecatedPermissions, permission)
 		if !permissionValidated {
-			return false
+			invalidPermissions = append(invalidPermissions, permission)
 		}
 	}
 
-	return true
+	return invalidPermissions
 }
 
 func CleanRoleNames(roleNames []string) ([]string, bool) {

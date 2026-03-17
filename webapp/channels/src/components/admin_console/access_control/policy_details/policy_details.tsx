@@ -476,14 +476,7 @@ function PolicyDetails({
                                     onValidate={() => {}}
                                     disabled={noUsableAttributes}
                                     userAttributes={autocompleteResult.
-                                        filter((attr) => {
-                                            if (accessControlSettings.EnableUserManagedAttributes) {
-                                                return true;
-                                            }
-                                            const isSynced = attr.attrs?.ldap || attr.attrs?.saml;
-                                            const isAdminManaged = attr.attrs?.managed === 'admin';
-                                            return isSynced || isAdminManaged;
-                                        }).
+                                        filter((attr) => !attr.name.includes(' ')).
                                         map((attr) => ({
                                             attribute: attr.name,
                                             values: [],

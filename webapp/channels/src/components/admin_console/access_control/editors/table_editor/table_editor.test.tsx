@@ -182,7 +182,7 @@ describe('findFirstAvailableAttributeFromList', () => {
         },
     });
 
-    test('returns first attribute that is synced from LDAP', () => {
+    test('returns first attribute without spaces', () => {
         const attributes = [
             createMockAttribute('invalid attribute'), // Has spaces
             createMockAttribute('unsafe_attribute'), // Not synced
@@ -190,10 +190,10 @@ describe('findFirstAvailableAttributeFromList', () => {
         ];
 
         const result = findFirstAvailableAttributeFromList(attributes, false);
-        expect(result?.name).toBe('ldap_attribute');
+        expect(result?.name).toBe('unsafe_attribute');
     });
 
-    test('returns first attribute that is synced from SAML', () => {
+    test('returns the first valid attribute regardless of source', () => {
         const attributes = [
             createMockAttribute('invalid attribute'), // Has spaces
             createMockAttribute('saml_attribute', {saml: 'saml_field'}), // Synced from SAML
@@ -213,7 +213,7 @@ describe('findFirstAvailableAttributeFromList', () => {
         expect(result?.name).toBe('user_managed_attribute');
     });
 
-    test('returns first attribute that is admin-managed', () => {
+    test('returns first attribute even when later ones are admin-managed', () => {
         const attributes = [
             createMockAttribute('invalid attribute'), // Has spaces
             createMockAttribute('unsafe_attribute'), // Not synced or admin-managed
@@ -221,7 +221,7 @@ describe('findFirstAvailableAttributeFromList', () => {
         ];
 
         const result = findFirstAvailableAttributeFromList(attributes, false);
-        expect(result?.name).toBe('admin_managed_attribute');
+        expect(result?.name).toBe('unsafe_attribute');
     });
 
     test('skips attributes with spaces even when synced', () => {

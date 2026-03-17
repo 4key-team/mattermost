@@ -226,6 +226,18 @@ func TestRolePatchFromChannelModerationsPatch(t *testing.T) {
 	}
 }
 
+func TestRoleInvalidPermissions(t *testing.T) {
+	role := &Role{
+		Name:        TeamAdminRoleId,
+		DisplayName: "Team Admin",
+		Description: "Team admin role",
+		Permissions: []string{PermissionManageTeam.Id, "not_a_real_permission"},
+	}
+
+	assert.False(t, role.IsValidWithoutId())
+	assert.Equal(t, []string{"not_a_real_permission"}, role.InvalidPermissions())
+}
+
 func TestGetChannelModeratedPermissions(t *testing.T) {
 	tests := []struct {
 		Name        string

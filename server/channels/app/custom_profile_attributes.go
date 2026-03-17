@@ -11,6 +11,7 @@ import (
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
+	"github.com/mattermost/mattermost/server/public/shared/request"
 	"github.com/mattermost/mattermost/server/v8/channels/store"
 	"github.com/pkg/errors"
 )
@@ -308,6 +309,11 @@ func (a *App) PatchCPAValues(userID string, fieldValueMap map[string]json.RawMes
 	message.Add("values", updatedFieldValueMap)
 	a.Publish(message)
 
+	a.triggerAllActiveChannelAccessControlSyncs(request.EmptyContext(a.Log()))
+	a.Srv().Go(func() {
+		a.syncAllActiveChannelAccessControlPolicies(request.EmptyContext(a.Log()))
+	})
+
 	return updatedValues, nil
 }
 
@@ -325,6 +331,11 @@ func (a *App) DeleteCPAValues(userID string) *model.AppError {
 	message.Add("user_id", userID)
 	message.Add("values", map[string]json.RawMessage{})
 	a.Publish(message)
+
+	a.triggerAllActiveChannelAccessControlSyncs(request.EmptyContext(a.Log()))
+	a.Srv().Go(func() {
+		a.syncAllActiveChannelAccessControlPolicies(request.EmptyContext(a.Log()))
+	})
 
 	return nil
 }
