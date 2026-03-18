@@ -362,6 +362,29 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "", http.StatusInternalServerError).Wrap(err)
 	}
 
+	policy, policyErr := a.GetAccessControlPolicy(rctx, channelID)
+	if policyErr != nil {
+		return policyErr
+	}
+	if policy == nil {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "channel policy not found", http.StatusNotFound)
+	}
+	if policy.Type != model.AccessControlPolicyTypeChannel {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "policy is not a channel policy", http.StatusBadRequest)
+	}
+	if !policy.Active {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "channel policy is inactive", http.StatusBadRequest)
+	}
+	if len(policy.Rules) == 0 && len(policy.Imports) == 0 {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "channel policy has no rules or imports", http.StatusBadRequest)
+	}
+	if channel.Type != model.ChannelTypePrivate {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "channel is not private", http.StatusBadRequest)
+	}
+	if channel.IsShared() {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "channel is shared", http.StatusBadRequest)
+	}
+
 	acs := a.Srv().Channels().AccessControl
 	if acs == nil {
 		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "Policy Administration Point is not initialized", http.StatusNotImplemented)
@@ -435,11 +458,16 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 	rctx.Logger().Info("Completed access-controlled channel sync",
 		mlog.String("channel_id", channel.Id),
 		mlog.String("team_id", channel.TeamId),
+		mlog.String("policy_id", policy.ID),
 		mlog.Int("matched_users", matchedUsers),
 		mlog.Int("added_users", addedUsers),
 		mlog.Int("removed_users", removedUsers),
 		mlog.Int("failed_operations", len(syncFailures)),
 	)
+
+	if matchedUsers == 0 && removedUsers == 0 {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "sync matched zero users for active channel policy", http.StatusBadRequest)
+	}
 
 	if len(syncFailures) > 0 {
 		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "membership sync failures: "+syncFailures[0], http.StatusInternalServerError)
