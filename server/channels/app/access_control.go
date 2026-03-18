@@ -396,17 +396,32 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 	removedUsers := 0
 
 	cursor := ""
+	usedGlobalSearch := false
 	for {
-		users, _, appErr := acs.QueryUsersForResource(rctx, channel.Id, "*", model.SubjectSearchOptions{
+		searchOpts := model.SubjectSearchOptions{
 			TeamID:                channel.TeamId,
 			ExcludeChannelMembers: channel.Id,
 			Limit:                 200,
 			Cursor: model.SubjectCursor{
 				TargetID: cursor,
 			},
-		})
+		}
+
+		users, _, appErr := acs.QueryUsersForResource(rctx, channel.Id, "*", searchOpts)
 		if appErr != nil {
 			return appErr
+		}
+
+		// Channel sync should be able to auto-add matched users to the team first.
+		// If we scoped the search to existing team members only and found none,
+		// fall back to a global search so eligible users outside the team can be discovered.
+		if len(users) == 0 && !usedGlobalSearch && cursor == "" {
+			usedGlobalSearch = true
+			searchOpts.TeamID = ""
+			users, _, appErr = acs.QueryUsersForResource(rctx, channel.Id, "*", searchOpts)
+			if appErr != nil {
+				return appErr
+			}
 		}
 		if len(users) == 0 {
 			break

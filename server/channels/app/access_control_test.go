@@ -698,6 +698,18 @@ func TestSyncAccessControlledChannelMembersAddsMatchedUserToTeamAndChannel(t *te
 			Limit:                 200,
 			Cursor: model.SubjectCursor{},
 		},
+	).Return([]*model.User{}, int64(0), nil).Once()
+
+	mockAccessControl.On(
+		"QueryUsersForResource",
+		th.Context,
+		privateChannel.Id,
+		"*",
+		model.SubjectSearchOptions{
+			ExcludeChannelMembers: privateChannel.Id,
+			Limit:                 200,
+			Cursor:                model.SubjectCursor{},
+		},
 	).Return([]*model.User{targetUser}, int64(1), nil).Once()
 
 	mockAccessControl.On(
@@ -706,7 +718,7 @@ func TestSyncAccessControlledChannelMembersAddsMatchedUserToTeamAndChannel(t *te
 		privateChannel.Id,
 		"*",
 		model.SubjectSearchOptions{
-			TeamID:                privateChannel.TeamId,
+			TeamID:                "",
 			ExcludeChannelMembers: privateChannel.Id,
 			Limit:                 200,
 			Cursor: model.SubjectCursor{TargetID: targetUser.Id},
