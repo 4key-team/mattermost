@@ -53,15 +53,20 @@ export const OPERATOR_CONFIG: Record<string, {type: OperatorType; celOp: CELOper
     [OperatorLabel.IN]: {type: 'list', celOp: CELOperator.IN},
 };
 
+const CEL_IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function isCELCompatibleAttributeName(name: string): boolean {
+    return CEL_IDENTIFIER_PATTERN.test(name);
+}
+
 // Checks if there are any usable attributes for ABAC policies.
-// An attribute is usable if it doesn't contain spaces (CEL incompatible).
+// An attribute is usable if it can be referenced as user.attributes.<name> in CEL.
 export function hasUsableAttributes(
     userAttributes: UserPropertyField[],
     _enableUserManagedAttributes: boolean,
 ): boolean {
     return userAttributes.some((attr) => {
-        const hasSpaces = attr.name.includes(' ');
-        return !hasSpaces;
+        return isCELCompatibleAttributeName(attr.name);
     });
 }
 

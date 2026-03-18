@@ -17,7 +17,7 @@ import ValueSelectorMenu from './value_selector_menu';
 
 import CELHelpModal from '../../modals/cel_help/cel_help_modal';
 import TestResultsModal from '../../modals/policy_test/test_modal';
-import {AddAttributeButton, TestButton, HelpText, OPERATOR_CONFIG, OPERATOR_LABELS, OperatorLabel} from '../shared';
+import {AddAttributeButton, TestButton, HelpText, isCELCompatibleAttributeName, OPERATOR_CONFIG, OPERATOR_LABELS, OperatorLabel} from '../shared';
 
 import './table_editor.scss';
 
@@ -40,14 +40,13 @@ interface TableEditorProps {
 }
 
 // Finds the first available (non-disabled) attribute from a list of user attributes.
-// An attribute is considered available if it doesn't have spaces in its name (CEL incompatible).
+// An attribute is considered available if it can be referenced directly in CEL.
 export const findFirstAvailableAttributeFromList = (
     userAttributes: UserPropertyField[],
     _enableUserManagedAttributes: boolean,
 ): UserPropertyField | undefined => {
     return userAttributes.find((attr) => {
-        const hasSpaces = attr.name.includes(' ');
-        return !hasSpaces;
+        return isCELCompatibleAttributeName(attr.name);
     });
 };
 

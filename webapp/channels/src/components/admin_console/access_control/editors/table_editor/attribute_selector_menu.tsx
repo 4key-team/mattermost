@@ -21,6 +21,8 @@ import type {UserPropertyField} from '@mattermost/types/properties';
 import * as Menu from 'components/menu';
 import WithTooltip from 'components/with_tooltip';
 
+import {isCELCompatibleAttributeName} from '../shared';
+
 import './selector_menus.scss';
 
 // Define AttributeIcon outside the main component
@@ -132,7 +134,7 @@ const AttributeSelectorMenu = ({currentAttribute, availableAttributes, disabled,
             />
             {options.map((option) => {
                 const {name} = option;
-                const hasSpaces = name.includes(' ');
+                const isCELCompatible = isCELCompatibleAttributeName(name);
 
                 const menuItem = (
                     <Menu.Item
@@ -141,9 +143,9 @@ const AttributeSelectorMenu = ({currentAttribute, availableAttributes, disabled,
                         role='menuitemradio'
                         forceCloseOnSelect={true}
                         aria-checked={name === currentAttribute}
-                        onClick={hasSpaces ? undefined : () => handleAttributeChange(name)}
+                        onClick={isCELCompatible ? () => handleAttributeChange(name) : undefined}
                         labels={<span>{name}</span>}
-                        disabled={hasSpaces}
+                        disabled={!isCELCompatible}
                         leadingElement={
                             <AttributeIcon
                                 attribute={option}
@@ -152,7 +154,7 @@ const AttributeSelectorMenu = ({currentAttribute, availableAttributes, disabled,
                         }
                         trailingElements={(
                             <>
-                                {hasSpaces && (
+                                {!isCELCompatible && (
                                     <InformationOutlineIcon
                                         size={18}
                                     />
@@ -167,10 +169,10 @@ const AttributeSelectorMenu = ({currentAttribute, availableAttributes, disabled,
 
                 // Determine tooltip content based on conditions
                 let tooltipContent = null;
-                if (hasSpaces) {
+                if (!isCELCompatible) {
                     tooltipContent = formatMessage({
-                        id: 'admin.access_control.table_editor.attribute_spaces_not_supported',
-                        defaultMessage: 'CEL is not compatible with variable names containing spaces',
+                        id: 'admin.access_control.table_editor.attribute_name_not_supported',
+                        defaultMessage: 'ABAC supports only attribute names with letters, numbers, and underscores, starting with a letter or underscore',
                     });
                 }
 

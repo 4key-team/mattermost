@@ -29,7 +29,7 @@ import {getHistory} from 'utils/browser_history';
 import ChannelList from './channel_list';
 
 import CELEditor from '../editors/cel_editor/editor';
-import {hasUsableAttributes} from '../editors/shared';
+import {hasUsableAttributes, isCELCompatibleAttributeName} from '../editors/shared';
 import TableEditor from '../editors/table_editor/table_editor';
 import PolicyConfirmationModal from '../modals/confirmation/confirmation_modal';
 
@@ -476,7 +476,7 @@ function PolicyDetails({
                                     onValidate={() => {}}
                                     disabled={noUsableAttributes}
                                     userAttributes={autocompleteResult.
-                                        filter((attr) => !attr.name.includes(' ')).
+                                        filter((attr) => isCELCompatibleAttributeName(attr.name)).
                                         map((attr) => ({
                                             attribute: attr.name,
                                             values: [],
