@@ -5,6 +5,7 @@ node_modules
 .rollup.cache
 *.tar.gz
 
+.parcel-cache/
 channels/dist
 playbooks/dist
 boards/dist

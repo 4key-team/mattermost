@@ -9,6 +9,7 @@ import type {ClientConfig, ClientLicense} from '@mattermost/types/config';
 import type {Role} from '@mattermost/types/roles';
 
 import GeneralConstants from 'mattermost-redux/constants/general';
+import Permissions from 'mattermost-redux/constants/permissions';
 import type {ActionResult} from 'mattermost-redux/types/actions';
 
 import BlockableLink from 'components/admin_console/blockable_link';
@@ -62,6 +63,21 @@ type RolesState = {
     all_users: {name: string; display_name: string; permissions: Role['permissions']};
     guests: {name: string; display_name: string; permissions: Role['permissions']};
 }
+
+const collectKnownPermissions = (value: unknown): string[] => {
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (value && typeof value === 'object') {
+        return Object.values(value).flatMap(collectKnownPermissions);
+    }
+
+    return [];
+};
+
+const KNOWN_PERMISSIONS = new Set(collectKnownPermissions(Permissions));
+
 class PermissionSystemSchemeSettings extends React.PureComponent<Props, State> {
     private rolesNeeded: string[];
 
@@ -157,28 +173,28 @@ class PermissionSystemSchemeSettings extends React.PureComponent<Props, State> {
         this.setState({
             loaded: true,
             roles: {
-                system_admin: props.roles.system_admin,
-                team_admin: props.roles.team_admin,
-                channel_admin: props.roles.channel_admin,
-                playbook_admin: props.roles.playbook_admin,
-                playbook_member: props.roles.playbook_member,
-                run_admin: props.roles.run_admin,
-                run_member: props.roles.run_member,
+                system_admin: this.sanitizeRolePermissions(props.roles.system_admin),
+                team_admin: this.sanitizeRolePermissions(props.roles.team_admin),
+                channel_admin: this.sanitizeRolePermissions(props.roles.channel_admin),
+                playbook_admin: this.sanitizeRolePermissions(props.roles.playbook_admin),
+                playbook_member: this.sanitizeRolePermissions(props.roles.playbook_member),
+                run_admin: this.sanitizeRolePermissions(props.roles.run_admin),
+                run_member: this.sanitizeRolePermissions(props.roles.run_member),
                 all_users: {
                     name: 'all_users',
                     display_name: 'All members',
-                    permissions: props.roles.system_user.permissions?.
-                        concat(props.roles.team_user.permissions).
-                        concat(props.roles.channel_user.permissions).
-                        concat(props.roles.playbook_member.permissions).
-                        concat(props.roles.run_member.permissions),
+                    permissions: this.sanitizeRolePermissions(props.roles.system_user).permissions?.
+                        concat(this.sanitizeRolePermissions(props.roles.team_user).permissions).
+                        concat(this.sanitizeRolePermissions(props.roles.channel_user).permissions).
+                        concat(this.sanitizeRolePermissions(props.roles.playbook_member).permissions).
+                        concat(this.sanitizeRolePermissions(props.roles.run_member).permissions),
                 },
                 guests: {
                     name: 'guests',
                     display_name: 'Guests',
-                    permissions: props.roles.system_guest.permissions?.
-                        concat(props.roles.team_guest.permissions).
-                        concat(props.roles.channel_guest.permissions),
+                    permissions: this.sanitizeRolePermissions(props.roles.system_guest).permissions?.
+                        concat(this.sanitizeRolePermissions(props.roles.team_guest).permissions).
+                        concat(this.sanitizeRolePermissions(props.roles.channel_guest).permissions),
                 },
             },
         });
@@ -269,17 +285,28 @@ class PermissionSystemSchemeSettings extends React.PureComponent<Props, State> {
         return roles;
     };
 
+    sanitizeRolePermissions = <T extends {permissions?: string[] | null}>(role: T): T => {
+        if (!role.permissions) {
+            return role;
+        }
+
+        return {
+            ...role,
+            permissions: role.permissions.filter((permission) => KNOWN_PERMISSIONS.has(permission)),
+        };
+    };
+
     handleSubmit = async () => {
-        const teamAdminPromise = this.props.actions.editRole(this.state.roles.team_admin);
-        const channelAdminPromise = this.props.actions.editRole(this.state.roles.channel_admin);
-        const playbookAdminPromise = this.props.actions.editRole(this.state.roles.playbook_admin);
+        const teamAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(this.state.roles.team_admin));
+        const channelAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(this.state.roles.channel_admin));
+        const playbookAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(this.state.roles.playbook_admin));
 
         const derivedRoles = this.restoreExcludedPermissions(this.deriveRolesFromAllUsers(this.state.roles.all_users));
-        const systemUserPromise = this.props.actions.editRole(derivedRoles.system_user);
-        const teamUserPromise = this.props.actions.editRole(derivedRoles.team_user);
-        const channelUserPromise = this.props.actions.editRole(derivedRoles.channel_user);
-        const playbookMemberPromise = this.props.actions.editRole(derivedRoles.playbook_member);
-        const runMemberPromise = this.props.actions.editRole(derivedRoles.run_member);
+        const systemUserPromise = this.props.actions.editRole(this.sanitizeRolePermissions(derivedRoles.system_user));
+        const teamUserPromise = this.props.actions.editRole(this.sanitizeRolePermissions(derivedRoles.team_user));
+        const channelUserPromise = this.props.actions.editRole(this.sanitizeRolePermissions(derivedRoles.channel_user));
+        const playbookMemberPromise = this.props.actions.editRole(this.sanitizeRolePermissions(derivedRoles.playbook_member));
+        const runMemberPromise = this.props.actions.editRole(this.sanitizeRolePermissions(derivedRoles.run_member));
 
         const promises = [
             teamAdminPromise,
@@ -294,9 +321,9 @@ class PermissionSystemSchemeSettings extends React.PureComponent<Props, State> {
 
         if (this.haveGuestAccountsPermissions()) {
             const guestRoles = this.restoreGuestPermissions(this.deriveRolesFromGuests(this.state.roles.guests));
-            const systemGuestPromise = this.props.actions.editRole(guestRoles.system_guest);
-            const teamGuestPromise = this.props.actions.editRole(guestRoles.team_guest);
-            const channelGuestPromise = this.props.actions.editRole(guestRoles.channel_guest);
+            const systemGuestPromise = this.props.actions.editRole(this.sanitizeRolePermissions(guestRoles.system_guest));
+            const teamGuestPromise = this.props.actions.editRole(this.sanitizeRolePermissions(guestRoles.team_guest));
+            const channelGuestPromise = this.props.actions.editRole(this.sanitizeRolePermissions(guestRoles.channel_guest));
             promises.push(systemGuestPromise, teamGuestPromise, channelGuestPromise);
         }
 

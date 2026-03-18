@@ -281,4 +281,44 @@ describe('components/admin_console/permission_schemes_settings/permission_system
         expect(getAnyState(wrapper).roles.team_admin.permissions.indexOf(Permissions.EDIT_OTHERS_POSTS)).toEqual(-1);
         expect(getAnyState(wrapper).roles.playbook_admin.permissions.indexOf(Permissions.EDIT_OTHERS_POSTS)).toEqual(-1);
     });
+
+    test('should strip unknown legacy permissions before saving roles', async () => {
+        const editRole = jest.fn().mockImplementation(() => Promise.resolve({data: {}}));
+        const roles: Record<string, Role> = {
+            ...defaultProps.roles,
+            team_admin: {
+                ...defaultRole,
+                id: 'team_admin_id',
+                name: 'team_admin',
+                display_name: 'Team Admin',
+                permissions: ['manage_team', 'manage_public_channel_auto_translation'],
+            },
+            channel_admin: {
+                ...defaultRole,
+                id: 'channel_admin_id',
+                name: 'channel_admin',
+                display_name: 'Channel Admin',
+                permissions: ['manage_channel_roles', 'manage_private_channel_auto_translation'],
+            },
+        };
+
+        const wrapper = shallowWithIntl(
+            <PermissionSystemSchemeSettings
+                {...defaultProps}
+                roles={roles}
+                actions={{...defaultProps.actions, editRole}}
+            />,
+        );
+
+        await getAnyInstance(wrapper).handleSubmit();
+
+        expect(editRole).toHaveBeenCalledWith(expect.objectContaining({
+            id: 'team_admin_id',
+            permissions: ['manage_team'],
+        }));
+        expect(editRole).toHaveBeenCalledWith(expect.objectContaining({
+            id: 'channel_admin_id',
+            permissions: ['manage_channel_roles'],
+        }));
+    });
 });

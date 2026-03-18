@@ -12,6 +12,7 @@ import type {Scheme, SchemePatch} from '@mattermost/types/schemes';
 import type {Team} from '@mattermost/types/teams';
 
 import GeneralConstants from 'mattermost-redux/constants/general';
+import Permissions from 'mattermost-redux/constants/permissions';
 import type {ActionResult} from 'mattermost-redux/types/actions';
 
 import BlockableLink from 'components/admin_console/blockable_link';
@@ -38,6 +39,20 @@ import PermissionsTreePlaybooks from '../permissions_tree_playbooks';
 type RolesMap = {
     [x: string]: Role;
 };
+
+const collectKnownPermissions = (value: unknown): string[] => {
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (value && typeof value === 'object') {
+        return Object.values(value).flatMap(collectKnownPermissions);
+    }
+
+    return [];
+};
+
+const KNOWN_PERMISSIONS = new Set(collectKnownPermissions(Permissions));
 
 export type Props = {
     schemeId: string;
@@ -248,29 +263,29 @@ export default class PermissionTeamSchemeSettings extends React.PureComponent<Pr
             return null;
         }
         return {
-            team_admin: teamAdmin,
-            channel_admin: channelAdmin,
-            playbook_admin: playbookAdmin,
-            playbook_member: playbookMember,
-            run_member: runMember,
-            team_guest: teamGuest,
-            team_user: teamUser,
-            channel_guest: channelGuest,
-            channel_user: channelUser,
+            team_admin: this.sanitizeRolePermissions(teamAdmin),
+            channel_admin: this.sanitizeRolePermissions(channelAdmin),
+            playbook_admin: this.sanitizeRolePermissions(playbookAdmin),
+            playbook_member: this.sanitizeRolePermissions(playbookMember),
+            run_member: this.sanitizeRolePermissions(runMember),
+            team_guest: this.sanitizeRolePermissions(teamGuest),
+            team_user: this.sanitizeRolePermissions(teamUser),
+            channel_guest: this.sanitizeRolePermissions(channelGuest),
+            channel_user: this.sanitizeRolePermissions(channelUser),
             all_users: {
                 name: 'all_users',
                 displayName: 'All members',
                 permissions: [
-                    ...(teamUser?.permissions || []),
-                    ...(channelUser?.permissions || []),
-                    ...(playbookMember?.permissions || []),
-                    ...(runMember?.permissions || []),
+                    ...(this.sanitizeRolePermissions(teamUser).permissions || []),
+                    ...(this.sanitizeRolePermissions(channelUser).permissions || []),
+                    ...(this.sanitizeRolePermissions(playbookMember).permissions || []),
+                    ...(this.sanitizeRolePermissions(runMember).permissions || []),
                 ],
             },
             guests: {
                 name: 'guests',
                 displayName: 'Guests',
-                permissions: teamGuest?.permissions.concat(channelGuest?.permissions || []),
+                permissions: (this.sanitizeRolePermissions(teamGuest).permissions || []).concat(this.sanitizeRolePermissions(channelGuest).permissions || []),
             },
         };
     };
@@ -335,6 +350,17 @@ export default class PermissionTeamSchemeSettings extends React.PureComponent<Pr
             }
         }
         return roles;
+    };
+
+    sanitizeRolePermissions = <T extends {permissions?: string[] | null}>(role: T): T => {
+        if (!role.permissions) {
+            return role;
+        }
+
+        return {
+            ...role,
+            permissions: role.permissions.filter((permission) => KNOWN_PERMISSIONS.has(permission)),
+        };
     };
 
     handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -442,21 +468,21 @@ export default class PermissionTeamSchemeSettings extends React.PureComponent<Pr
             runMember = {...runMember, id: this.props.roles[newScheme.default_run_member_role].id} as Role;
         }
 
-        const teamAdminPromise = this.props.actions.editRole(teamAdmin as Role);
-        const channelAdminPromise = this.props.actions.editRole(channelAdmin as Role);
-        const playbookAdminPromise = this.props.actions.editRole(playbookAdmin as Role);
-        const playbookMemberPromise = this.props.actions.editRole(playbookMember as Role);
-        const runMemberPromise = this.props.actions.editRole(runMember as Role);
+        const teamAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(teamAdmin as Role));
+        const channelAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(channelAdmin as Role));
+        const playbookAdminPromise = this.props.actions.editRole(this.sanitizeRolePermissions(playbookAdmin as Role));
+        const playbookMemberPromise = this.props.actions.editRole(this.sanitizeRolePermissions(playbookMember as Role));
+        const runMemberPromise = this.props.actions.editRole(this.sanitizeRolePermissions(runMember as Role));
         const promises = [teamAdminPromise, channelAdminPromise, playbookAdminPromise, playbookMemberPromise, runMemberPromise];
 
-        const teamUserPromise = this.props.actions.editRole(teamUser);
-        const channelUserPromise = this.props.actions.editRole(channelUser);
+        const teamUserPromise = this.props.actions.editRole(this.sanitizeRolePermissions(teamUser));
+        const channelUserPromise = this.props.actions.editRole(this.sanitizeRolePermissions(channelUser));
         promises.push(teamUserPromise);
         promises.push(channelUserPromise);
 
         if (this.haveGuestAccountsPermissions()) {
-            const teamGuestPromise = this.props.actions.editRole(teamGuest as Role);
-            const channelGuestPromise = this.props.actions.editRole(channelGuest as Role);
+            const teamGuestPromise = this.props.actions.editRole(this.sanitizeRolePermissions(teamGuest as Role));
+            const channelGuestPromise = this.props.actions.editRole(this.sanitizeRolePermissions(channelGuest as Role));
             promises.push(teamGuestPromise, channelGuestPromise);
         }
 
