@@ -368,6 +368,9 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 	}
 
 	var syncFailures []string
+	matchedUsers := 0
+	addedUsers := 0
+	removedUsers := 0
 
 	cursor := ""
 	for {
@@ -386,6 +389,8 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 			break
 		}
 
+		matchedUsers += len(users)
+
 		for _, user := range users {
 			if _, appErr := a.addAccessControlledUserToChannel(rctx, user, channel); appErr != nil {
 				rctx.Logger().Warn("Failed to auto-add user to access-controlled channel",
@@ -394,6 +399,13 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 					mlog.Err(appErr),
 				)
 				syncFailures = append(syncFailures, "add:"+user.Id+":"+appErr.Id)
+			} else {
+				addedUsers++
+				rctx.Logger().Debug("Added user to access-controlled channel",
+					mlog.String("channel_id", channel.Id),
+					mlog.String("team_id", channel.TeamId),
+					mlog.String("user_id", user.Id),
+				)
 			}
 		}
 
@@ -415,8 +427,19 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 				mlog.Err(removeErr),
 			)
 			syncFailures = append(syncFailures, "remove:"+member.UserId+":"+removeErr.Id)
+		} else {
+			removedUsers++
 		}
 	}
+
+	rctx.Logger().Info("Completed access-controlled channel sync",
+		mlog.String("channel_id", channel.Id),
+		mlog.String("team_id", channel.TeamId),
+		mlog.Int("matched_users", matchedUsers),
+		mlog.Int("added_users", addedUsers),
+		mlog.Int("removed_users", removedUsers),
+		mlog.Int("failed_operations", len(syncFailures)),
+	)
 
 	if len(syncFailures) > 0 {
 		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "membership sync failures: "+syncFailures[0], http.StatusInternalServerError)
@@ -433,6 +456,11 @@ func (a *App) addAccessControlledUserToChannel(rctx request.CTX, user *model.Use
 
 	var nfErr *store.ErrNotFound
 	if appErr.Id == "app.team.get_member.missing.app_error" || errors.As(appErr.Unwrap(), &nfErr) {
+		rctx.Logger().Debug("User missing from team during access-controlled channel sync; adding to team first",
+			mlog.String("channel_id", channel.Id),
+			mlog.String("team_id", channel.TeamId),
+			mlog.String("user_id", user.Id),
+		)
 		if _, teamErr := a.AddTeamMember(rctx, channel.TeamId, user.Id); teamErr != nil {
 			return nil, teamErr
 		}
