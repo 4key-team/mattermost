@@ -673,6 +673,59 @@ func TestValidateAccessControlPolicyPermission(t *testing.T) {
 	})
 }
 
+func TestSyncAccessControlledChannelMembersAddsMatchedUserToTeamAndChannel(t *testing.T) {
+	th := Setup(t).InitBasic(t)
+
+	privateChannel := th.CreatePrivateChannel(t, th.BasicTeam)
+	t.Cleanup(func() {
+		appErr := th.App.PermanentDeleteChannel(th.Context, privateChannel)
+		require.Nil(t, appErr)
+	})
+
+	targetUser := th.CreateUser(t)
+
+	mockAccessControl := &mocks.AccessControlServiceInterface{}
+	th.App.Srv().ch.AccessControl = mockAccessControl
+
+	mockAccessControl.On(
+		"QueryUsersForResource",
+		th.Context,
+		privateChannel.Id,
+		"*",
+		model.SubjectSearchOptions{
+			TeamID:                privateChannel.TeamId,
+			ExcludeChannelMembers: privateChannel.Id,
+			Limit:                 200,
+			Cursor: model.SubjectCursor{},
+		},
+	).Return([]*model.User{targetUser}, int64(1), nil).Once()
+
+	mockAccessControl.On(
+		"QueryUsersForResource",
+		th.Context,
+		privateChannel.Id,
+		"*",
+		model.SubjectSearchOptions{
+			TeamID:                privateChannel.TeamId,
+			ExcludeChannelMembers: privateChannel.Id,
+			Limit:                 200,
+			Cursor: model.SubjectCursor{TargetID: targetUser.Id},
+		},
+	).Return([]*model.User{}, int64(0), nil).Once()
+
+	mockAccessControl.On("GetChannelMembersToRemove", th.Context, privateChannel.Id).Return([]*model.ChannelMember{}, nil).Once()
+
+	appErr := th.App.SyncAccessControlledChannelMembers(th.Context, privateChannel.Id)
+	require.Nil(t, appErr)
+
+	_, err := th.App.Srv().Store().Team().GetMember(th.Context, privateChannel.TeamId, targetUser.Id)
+	require.NoError(t, err)
+
+	_, err = th.App.Srv().Store().Channel().GetMember(th.Context, privateChannel.Id, targetUser.Id)
+	require.NoError(t, err)
+	mockAccessControl.AssertExpectations(t)
+}
+
 func TestValidateChannelAccessControlPolicyCreation(t *testing.T) {
 	th := Setup(t).InitBasic(t)
 

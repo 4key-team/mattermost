@@ -57,41 +57,6 @@ const MenuStartTrial = (props: Props): JSX.Element | null => {
             id={props.id}
         >
             <FreeVersionBadge>{badgeText}</FreeVersionBadge>
-            <div className='editionText'>
-                {isEntryLicense ? (
-                    formatMessage({
-                        id: 'navbar_dropdown.entryVersionText',
-                        defaultMessage: 'Entry offers Enterprise Advance capabilities <link>with limits</link> designed to support evaluation.',
-                    },
-                    {
-                        link: (msg: React.ReactNode) => (
-                            <ExternalLink
-                                location='menu_start_trial.entry-link'
-                                href={LicenseLinks.ENTRY_LIMITS_INFO}
-                            >
-                                {msg}
-                            </ExternalLink>
-                        ),
-                    })
-                ) : (
-                    formatMessage(
-                        {
-                            id: 'navbar_dropdown.versionText',
-                            defaultMessage: 'This is the free <link>unsupported</link> edition of Mattermost.',
-                        },
-                        {
-                            link: (msg: React.ReactNode) => (
-                                <ExternalLink
-                                    location='menu_start_trial.unsupported-link'
-                                    href={LicenseLinks.UNSUPPORTED}
-                                >
-                                    {msg}
-                                </ExternalLink>
-                            ),
-                        },
-                    )
-                )}
-            </div>
         </li>
     );
 };

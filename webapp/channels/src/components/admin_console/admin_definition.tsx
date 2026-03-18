@@ -1624,11 +1624,7 @@ const AdminDefinition: AdminDefinitionType = {
             high_availability: {
                 url: 'environment/high_availability',
                 title: defineMessage({id: 'admin.sidebar.highAvailability', defaultMessage: 'High Availability'}),
-                isHidden: it.any(
-                    it.not(it.licensedForFeature('Cluster')),
-                    it.configIsTrue('ExperimentalSettings', 'RestrictSystemAdmin'),
-                    it.not(it.userHasReadPermissionOnResource(RESOURCE_KEYS.ENVIRONMENT.HIGH_AVAILABILITY)),
-                ),
+                isHidden: () => true,
                 searchableStrings: clusterSearchableStrings,
                 isDisabled: it.not(it.userHasWritePermissionOnResource(RESOURCE_KEYS.ENVIRONMENT.HIGH_AVAILABILITY)),
                 schema: {

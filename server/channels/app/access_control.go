@@ -4,12 +4,14 @@
 package app
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/shared/mlog"
 	"github.com/mattermost/mattermost/server/public/shared/request"
+	"github.com/mattermost/mattermost/server/v8/channels/store"
 )
 
 func (a *App) GetChannelsForPolicy(rctx request.CTX, policyID string, cursor model.AccessControlPolicyCursor, limit int) ([]*model.ChannelWithTeamData, int64, *model.AppError) {
@@ -365,6 +367,8 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "Policy Administration Point is not initialized", http.StatusNotImplemented)
 	}
 
+	var syncFailures []string
+
 	cursor := ""
 	for {
 		users, _, appErr := acs.QueryUsersForResource(rctx, channel.Id, "*", model.SubjectSearchOptions{
@@ -383,12 +387,13 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 		}
 
 		for _, user := range users {
-			if _, appErr := a.AddUserToChannel(rctx, user, channel, false); appErr != nil {
+			if _, appErr := a.addAccessControlledUserToChannel(rctx, user, channel); appErr != nil {
 				rctx.Logger().Warn("Failed to auto-add user to access-controlled channel",
 					mlog.String("channel_id", channel.Id),
 					mlog.String("user_id", user.Id),
 					mlog.Err(appErr),
 				)
+				syncFailures = append(syncFailures, "add:"+user.Id+":"+appErr.Id)
 			}
 		}
 
@@ -409,10 +414,33 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 				mlog.String("user_id", member.UserId),
 				mlog.Err(removeErr),
 			)
+			syncFailures = append(syncFailures, "remove:"+member.UserId+":"+removeErr.Id)
 		}
 	}
 
+	if len(syncFailures) > 0 {
+		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "membership sync failures: "+syncFailures[0], http.StatusInternalServerError)
+	}
+
 	return nil
+}
+
+func (a *App) addAccessControlledUserToChannel(rctx request.CTX, user *model.User, channel *model.Channel) (*model.ChannelMember, *model.AppError) {
+	member, appErr := a.AddUserToChannel(rctx, user, channel, false)
+	if appErr == nil {
+		return member, nil
+	}
+
+	var nfErr *store.ErrNotFound
+	if appErr.Id == "app.team.get_member.missing.app_error" || errors.As(appErr.Unwrap(), &nfErr) {
+		if _, teamErr := a.AddTeamMember(rctx, channel.TeamId, user.Id); teamErr != nil {
+			return nil, teamErr
+		}
+
+		return a.AddUserToChannel(rctx, user, channel, true)
+	}
+
+	return nil, appErr
 }
 
 func (a *App) syncAllActiveChannelAccessControlPolicies(rctx request.CTX) {
