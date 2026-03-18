@@ -458,6 +458,14 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 		return appErr
 	}
 	for _, member := range members {
+		if member.SchemeAdmin || slices.Contains(member.GetRoles(), "channel_admin") {
+			rctx.Logger().Debug("Skipping auto-removal for channel admin during access-controlled channel sync",
+				mlog.String("channel_id", channel.Id),
+				mlog.String("user_id", member.UserId),
+			)
+			continue
+		}
+
 		if removeErr := a.RemoveUserFromChannel(rctx, member.UserId, "", channel); removeErr != nil {
 			rctx.Logger().Warn("Failed to auto-remove user from access-controlled channel",
 				mlog.String("channel_id", channel.Id),
@@ -481,11 +489,19 @@ func (a *App) SyncAccessControlledChannelMembers(rctx request.CTX, channelID str
 	)
 
 	if matchedUsers == 0 && removedUsers == 0 {
-		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "sync matched zero users for active channel policy", http.StatusBadRequest)
+		rctx.Logger().Warn("Access-controlled channel sync matched zero users for active channel policy",
+			mlog.String("channel_id", channel.Id),
+			mlog.String("policy_id", policy.ID),
+		)
 	}
 
 	if len(syncFailures) > 0 {
-		return model.NewAppError("SyncAccessControlledChannelMembers", "app.pap.sync_access_control_channel_members.app_error", nil, "membership sync failures: "+syncFailures[0], http.StatusInternalServerError)
+		rctx.Logger().Warn("Access-controlled channel sync completed with membership operation failures",
+			mlog.String("channel_id", channel.Id),
+			mlog.String("policy_id", policy.ID),
+			mlog.String("first_failure", syncFailures[0]),
+			mlog.Int("failed_operations", len(syncFailures)),
+		)
 	}
 
 	return nil
