@@ -260,10 +260,10 @@ func (s *service) buildResourceExpression(rctx request.CTX, resourceID, action s
 }
 
 func (s *service) getEffectiveRules(rctx request.CTX, policyID, action string) ([]model.AccessControlPolicyRule, *model.AppError) {
-	return s.getEffectiveRulesRecursive(rctx, policyID, action, map[string]bool{})
+	return s.getEffectiveRulesRecursive(rctx, policyID, action, map[string]bool{}, true)
 }
 
-func (s *service) getEffectiveRulesRecursive(rctx request.CTX, policyID, action string, seen map[string]bool) ([]model.AccessControlPolicyRule, *model.AppError) {
+func (s *service) getEffectiveRulesRecursive(rctx request.CTX, policyID, action string, seen map[string]bool, requireActive bool) ([]model.AccessControlPolicyRule, *model.AppError) {
 	if seen[policyID] {
 		return nil, model.NewAppError("getEffectiveRulesRecursive", "app.pap.get_policy.app_error", nil, "cyclic access control policy import", http.StatusBadRequest)
 	}
@@ -276,13 +276,19 @@ func (s *service) getEffectiveRulesRecursive(rctx request.CTX, policyID, action 
 		}
 		return nil, appErr
 	}
-	if policy == nil || !policy.Active {
+	if policy == nil {
+		return nil, nil
+	}
+	if requireActive && !policy.Active {
 		return nil, nil
 	}
 
 	var rules []model.AccessControlPolicyRule
 	for _, importedID := range policy.Imports {
-		importedRules, importedErr := s.getEffectiveRulesRecursive(rctx, importedID, action, seen)
+		// Parent policies act as rule templates for assigned channels.
+		// The channel policy's active flag controls enforcement; imported parent
+		// rules must still resolve even if the parent policy itself is inactive.
+		importedRules, importedErr := s.getEffectiveRulesRecursive(rctx, importedID, action, seen, false)
 		if importedErr != nil {
 			return nil, importedErr
 		}
