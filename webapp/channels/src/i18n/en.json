@@ -328,6 +328,7 @@
   "admin.access_control.policy.save_policy_confirmation_title": "Save access control policy ",
   "admin.access_control.table_editor.add_attribute": "Add attribute",
   "admin.access_control.table_editor.attribute": "Attribute",
+  "admin.access_control.table_editor.attribute_name_not_supported": "ABAC supports only attribute names with letters, numbers, and underscores, starting with a letter or underscore",
   "admin.access_control.table_editor.attribute_spaces_not_supported": "CEL is not compatible with variable names containing spaces",
   "admin.access_control.table_editor.attribute_synced": "This attribute is synced from an external source",
   "admin.access_control.table_editor.blank_state": "Select a user attribute and values to create a rule",
