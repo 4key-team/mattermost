@@ -51,8 +51,9 @@ func TestGetPreferences(t *testing.T) {
 	prefs, _, err := client.GetPreferences(context.Background(), user1.Id)
 	require.NoError(t, err)
 
-	// 6 because we have 3 initial preferences tutorial_step, recommended_next_steps and system_notification are added when creating a new user
-	require.Equal(t, len(prefs), 6, "received the wrong number of preferences")
+	// 7 because we have 4 initial preferences tutorial_step, recommended_next_steps, system_notification,
+	// and display_settings/use_military_time added when creating a new user
+	require.Equal(t, len(prefs), 7, "received the wrong number of preferences")
 
 	for _, preference := range prefs {
 		require.Equal(t, preference.UserId, th.BasicUser.Id, "user id does not match")

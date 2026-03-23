@@ -349,6 +349,22 @@ func TestCreateUser(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, "sanitized", user.Nickname)
 	})
+
+	t.Run("should default to 24-hour time", func(t *testing.T) {
+		user := &model.User{
+			Email:    model.NewId() + "military-time@example.com",
+			Username: "militarytime" + model.NewId(),
+			Password: "passwd12345",
+		}
+
+		createdUser, err := th.App.CreateUser(th.Context, user)
+		require.Nil(t, err)
+
+		pref, nErr := th.App.Srv().Store().Preference().Get(createdUser.Id, model.PreferenceCategoryDisplaySettings, model.PreferenceNameUseMilitaryTime)
+		require.NoError(t, nErr)
+		require.NotNil(t, pref)
+		require.Equal(t, "true", pref.Value)
+	})
 }
 
 func TestUpdateUserActive(t *testing.T) {
