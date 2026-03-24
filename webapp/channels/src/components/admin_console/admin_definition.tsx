@@ -6153,8 +6153,8 @@ const AdminDefinition: AdminDefinitionType = {
                                     display_name: defineMessage({id: 'admin.experimental.defaultTheme.options.sapphire', defaultMessage: 'Sapphire'}),
                                 },
                                 {
-                                    value: 'lagoon',
-                                    display_name: defineMessage({id: 'admin.experimental.defaultTheme.options.lagoon', defaultMessage: 'Lagoon'}),
+                                    value: 'realcity',
+                                    display_name: defineMessage({id: 'admin.experimental.defaultTheme.options.realcity', defaultMessage: 'RealCity'}),
                                 },
                                 {
                                     value: 'quartz',

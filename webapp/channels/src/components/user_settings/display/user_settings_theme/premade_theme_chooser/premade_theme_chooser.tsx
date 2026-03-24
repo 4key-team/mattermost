@@ -28,10 +28,10 @@ const PremadeThemeChooser = ({theme, updateTheme, allowedThemes = []}: Props) =>
             }
 
             const premadeTheme: Theme = Object.assign({}, Preferences.THEMES[k as ThemeKey]);
-            const themeName = k === 'lagoon' ? 'Lagoon' : premadeTheme.type;
+            const themeName = k === 'realcity' ? 'RealCity' : premadeTheme.type;
 
             let activeClass = '';
-            if ((k === 'lagoon' && theme.sidebarBg === premadeTheme.sidebarBg) || premadeTheme.type === theme.type) {
+            if ((k === 'realcity' && theme.sidebarBg === premadeTheme.sidebarBg) || premadeTheme.type === theme.type) {
                 activeClass = 'active';
             }
 
