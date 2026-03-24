@@ -88,3 +88,18 @@ table.systemUsersTable {
         margin-top: 12px;
     }
 }
+
+.systemUsers__headerActions {
+    display: flex;
+    gap: 8px;
+}
+
+.systemUsers__passwordActions {
+    display: flex;
+    gap: 4px;
+
+    .btn {
+        min-width: 0;
+        white-space: nowrap;
+    }
+}

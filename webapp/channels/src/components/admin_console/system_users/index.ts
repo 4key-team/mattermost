@@ -8,7 +8,8 @@ import {ReportDuration} from '@mattermost/types/reports';
 
 import {savePreferences} from 'mattermost-redux/actions/preferences';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/common';
-import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import {createUser} from 'mattermost-redux/actions/users';
+import {getConfig, getPasswordConfig} from 'mattermost-redux/selectors/entities/general';
 
 import {getUserCountForReporting, getUserReports, setAdminConsoleUsersManagementTableProperties} from 'actions/views/admin';
 import {adminConsoleUserManagementTablePropertiesInitialState} from 'reducers/views/admin';
@@ -28,6 +29,7 @@ function mapStateToProps(state: GlobalState) {
     const experimentalEnableAuthenticationTransfer = config.ExperimentalEnableAuthenticationTransfer === 'true';
 
     const currentUser = getCurrentUser(state);
+    const passwordConfig = getPasswordConfig(state);
 
     const tableProperties = getAdminConsoleUserManagementTableProperties(state);
     const tablePropertySortColumn = tableProperties?.sortColumn ?? adminConsoleUserManagementTablePropertiesInitialState.sortColumn;
@@ -51,6 +53,7 @@ function mapStateToProps(state: GlobalState) {
         enableUserAccessTokens,
         experimentalEnableAuthenticationTransfer,
         currentUser,
+        passwordConfig,
         tablePropertySortColumn,
         tablePropertySortIsDescending,
         tablePropertyPageSize,
@@ -71,6 +74,7 @@ function mapStateToProps(state: GlobalState) {
 const mapDispatchToProps = {
     getUserReports,
     getUserCountForReporting,
+    createUser,
     savePreferences,
     setAdminConsoleUsersManagementTableProperties,
 };

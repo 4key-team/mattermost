@@ -11,16 +11,20 @@ import {useHistory} from 'react-router-dom';
 import type {ServerError} from '@mattermost/types/errors';
 import {CursorPaginationDirection} from '@mattermost/types/reports';
 import type {ReportDuration, UserReport} from '@mattermost/types/reports';
+import type {UserProfile} from '@mattermost/types/users';
 
 import {AdminConsoleListTable, ElapsedDurationCell, PAGE_SIZES, LoadingStates} from 'components/admin_console/list_table';
 import type {TableMeta} from 'components/admin_console/list_table';
 import SharedUserIndicator from 'components/shared_user_indicator';
 import AdminHeader from 'components/widgets/admin_console/admin_header';
 
+import {isSystemAdmin} from 'mattermost-redux/utils/user_utils';
+
 import {getDisplayName, imageURLForUser} from 'utils/utils';
 
 import type {AdminConsoleUserManagementTableProperties} from 'types/store/views';
 
+import CreateUserModal from './create_user_modal';
 import {ColumnNames} from './constants';
 import {RevokeSessionsButton} from './revoke_sessions_button';
 import {SystemUsersColumnTogglerMenu} from './system_users_column_toggler_menu';
@@ -68,6 +72,7 @@ function SystemUsers(props: Props) {
     const [userReports, setUserReports] = useState<UserReportWithError[]>([]);
     const [userCount, setUserCount] = useState<number | undefined>();
     const [loadingState, setLoadingState] = useState<LoadingStates>(LoadingStates.Loading);
+    const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
     // Effect to get the total user count
     useEffect(() => {
@@ -156,6 +161,11 @@ function SystemUsers(props: Props) {
                 history.push(`/admin_console/user_management/user/${userId}`);
             }
         }
+    }
+
+    function handleCreateUserSuccess(user: UserProfile) {
+        setShowCreateUserModal(false);
+        history.push(`/admin_console/user_management/user/${user.id}`);
     }
 
     function handlePreviousPageClick() {
@@ -476,7 +486,21 @@ function SystemUsers(props: Props) {
                         <span id='systemUsersTable-headerId'>{formatMessageChunk}</span>
                     )}
                 </FormattedMessage>
-                <RevokeSessionsButton/>
+                <div className='systemUsers__headerActions'>
+                    {isSystemAdmin(props.currentUser.roles) && (
+                        <button
+                            type='button'
+                            className='btn btn-primary'
+                            onClick={() => setShowCreateUserModal(true)}
+                        >
+                            <FormattedMessage
+                                id='admin.system_users.create_user.button'
+                                defaultMessage='Create User'
+                            />
+                        </button>
+                    )}
+                    <RevokeSessionsButton/>
+                </div>
             </AdminHeader>
             <div className='admin-console__wrapper'>
                 <div className='admin-console__container ignore-marking'>
@@ -507,6 +531,14 @@ function SystemUsers(props: Props) {
                     />
                 </div>
             </div>
+            {showCreateUserModal && (
+                <CreateUserModal
+                    onExited={() => setShowCreateUserModal(false)}
+                    onSuccess={handleCreateUserSuccess}
+                    passwordConfig={props.passwordConfig}
+                    actions={{createUser: props.createUser}}
+                />
+            )}
         </div>
     );
 }
