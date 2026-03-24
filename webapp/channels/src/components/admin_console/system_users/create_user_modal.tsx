@@ -1,7 +1,7 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {useIntl} from 'react-intl';
 
 import {GenericModal} from '@mattermost/components';
@@ -38,7 +38,11 @@ export default function CreateUserModal({
     const [show, setShow] = useState(true);
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [position, setPosition] = useState('');
     const [password, setPassword] = useState('');
+    const [copied, setCopied] = useState(false);
     const [serverError, setServerError] = useState<React.ReactNode>(null);
     const [emailError, setEmailError] = useState<React.ReactNode>(null);
     const [usernameError, setUsernameError] = useState<React.ReactNode>(null);
@@ -47,6 +51,15 @@ export default function CreateUserModal({
     const emailRef = useRef<HTMLInputElement>(null);
     const usernameRef = useRef<HTMLInputElement>(null);
     const passwordRef = useRef<HTMLInputElement>(null);
+    const copyTimeoutRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) {
+                window.clearTimeout(copyTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleGeneratePassword = useCallback(() => {
         const lowercase = 'abcdefghijklmnopqrstuvwxyz';
@@ -107,6 +120,16 @@ export default function CreateUserModal({
         }
 
         copyToClipboard(password);
+        setCopied(true);
+
+        if (copyTimeoutRef.current) {
+            window.clearTimeout(copyTimeoutRef.current);
+        }
+
+        copyTimeoutRef.current = window.setTimeout(() => {
+            setCopied(false);
+            copyTimeoutRef.current = null;
+        }, 5000);
     }, [password]);
 
     const handleCancel = useCallback(() => {
@@ -147,6 +170,9 @@ export default function CreateUserModal({
         const userToCreate = {
             email: normalizedEmail,
             username: normalizedUsername,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            position: position.trim(),
             password,
         } as UserProfile;
 
@@ -167,7 +193,7 @@ export default function CreateUserModal({
 
         onSuccess(result.data);
         setShow(false);
-    }, [actions, email, formatMessage, onSuccess, password, passwordConfig, username]);
+    }, [actions, email, firstName, formatMessage, lastName, onSuccess, password, passwordConfig, position, username]);
 
     return (
         <GenericModal
@@ -230,6 +256,54 @@ export default function CreateUserModal({
                     customMessage={usernameError ? {type: 'error', value: usernameError} : undefined}
                 />
                 <Input
+                    type='text'
+                    name='first_name'
+                    autoComplete='off'
+                    label={formatMessage({
+                        id: 'admin.system_users.create_user.first_name',
+                        defaultMessage: 'First name',
+                    })}
+                    placeholder={formatMessage({
+                        id: 'admin.system_users.create_user.first_name_placeholder',
+                        defaultMessage: 'Enter first name',
+                    })}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    maxLength={64}
+                />
+                <Input
+                    type='text'
+                    name='last_name'
+                    autoComplete='off'
+                    label={formatMessage({
+                        id: 'admin.system_users.create_user.last_name',
+                        defaultMessage: 'Last name',
+                    })}
+                    placeholder={formatMessage({
+                        id: 'admin.system_users.create_user.last_name_placeholder',
+                        defaultMessage: 'Enter last name',
+                    })}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    maxLength={64}
+                />
+                <Input
+                    type='text'
+                    name='position'
+                    autoComplete='off'
+                    label={formatMessage({
+                        id: 'admin.system_users.create_user.position',
+                        defaultMessage: 'Job title',
+                    })}
+                    placeholder={formatMessage({
+                        id: 'admin.system_users.create_user.position_placeholder',
+                        defaultMessage: 'Enter job title',
+                    })}
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    maxLength={128}
+                />
+                <Input
                     ref={passwordRef as React.Ref<HTMLInputElement>}
                     type='password'
                     name='password'
@@ -249,7 +323,7 @@ export default function CreateUserModal({
                         <div className='systemUsers__passwordActions'>
                             <button
                                 type='button'
-                                className='btn btn-tertiary btn-sm'
+                                className='systemUsers__passwordAction'
                                 onClick={handleGeneratePassword}
                             >
                                 {formatMessage({
@@ -259,11 +333,14 @@ export default function CreateUserModal({
                             </button>
                             <button
                                 type='button'
-                                className='btn btn-tertiary btn-sm'
+                                className='systemUsers__passwordAction'
                                 onClick={handleCopyPassword}
                                 disabled={!password}
                             >
-                                {formatMessage({
+                                {copied ? formatMessage({
+                                    id: 'admin.system_users.create_user.password_copied',
+                                    defaultMessage: 'Copied',
+                                }) : formatMessage({
                                     id: 'admin.system_users.create_user.password_copy',
                                     defaultMessage: 'Copy',
                                 })}

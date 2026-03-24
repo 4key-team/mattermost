@@ -13,7 +13,7 @@ import SystemUserDetail, {getUserAuthenticationTextField} from 'components/admin
 import type {Params, Props} from 'components/admin_console/system_user_detail/system_user_detail';
 
 import type {MockIntl} from 'tests/helpers/intl-test-helper';
-import {renderWithContext, screen, waitFor, waitForElementToBeRemoved} from 'tests/react_testing_utils';
+import {renderWithContext, screen, userEvent, waitFor, waitForElementToBeRemoved} from 'tests/react_testing_utils';
 import Constants from 'utils/constants';
 import {TestHelper} from 'utils/test_helper';
 
@@ -131,6 +131,51 @@ describe('SystemUserDetail', () => {
         await waitForLoadingToFinish();
 
         expect(container).toMatchSnapshot();
+    });
+
+    test('should update first name, last name and position', async () => {
+        const updatedUser = {
+            ...user,
+            first_name: 'New',
+            last_name: 'Name',
+            position: 'Manager',
+        } as UserProfile;
+        const patchUser = jest.fn().mockResolvedValue({data: updatedUser});
+
+        renderWithContext(
+            <SystemUserDetail
+                {...defaultProps}
+                patchUser={patchUser}
+            />,
+        );
+
+        await waitForLoadingToFinish();
+
+        const firstNameInput = screen.getByText('First Name').closest('label')?.querySelector('input');
+        const lastNameInput = screen.getByText('Last Name').closest('label')?.querySelector('input');
+        const positionInput = screen.getByText('Job Title').closest('label')?.querySelector('input');
+
+        expect(firstNameInput).toBeTruthy();
+        expect(lastNameInput).toBeTruthy();
+        expect(positionInput).toBeTruthy();
+
+        await userEvent.clear(firstNameInput as HTMLInputElement);
+        await userEvent.type(firstNameInput as HTMLInputElement, 'New');
+        await userEvent.clear(lastNameInput as HTMLInputElement);
+        await userEvent.type(lastNameInput as HTMLInputElement, 'Name');
+        await userEvent.clear(positionInput as HTMLInputElement);
+        await userEvent.type(positionInput as HTMLInputElement, 'Manager');
+        await userEvent.click(screen.getByTestId('saveSetting'));
+
+        await waitFor(() => {
+            expect(patchUser).toHaveBeenCalledWith(expect.objectContaining({
+                id: user.id,
+                email: user.email,
+                first_name: 'New',
+                last_name: 'Name',
+                position: 'Manager',
+            }));
+        });
     });
 });
 

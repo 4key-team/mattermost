@@ -133,7 +133,7 @@ const getThemePreference = createSelector(
     },
 );
 
-export type ThemeKey = 'denim' | 'sapphire' | 'lagoon' | 'quartz' | 'indigo' | 'onyx';
+export type ThemeKey = 'denim' | 'sapphire' | 'realcity' | 'quartz' | 'indigo' | 'onyx';
 
 export type LegacyThemeType = 'Mattermost' | 'Organization' | 'Mattermost Dark' | 'Windows Dark';
 

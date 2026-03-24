@@ -28,6 +28,10 @@ describe('components/admin_console/system_users/create_user_modal', () => {
         jest.clearAllMocks();
     });
 
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
     test('should validate required inputs before submitting', async () => {
         renderWithContext(<CreateUserModal {...baseProps}/>);
 
@@ -55,6 +59,9 @@ describe('components/admin_console/system_users/create_user_modal', () => {
 
         await userEvent.type(screen.getByLabelText(/Email/i), 'new.user@example.com');
         await userEvent.type(screen.getByLabelText(/Username/i), 'newuser');
+        await userEvent.type(screen.getByLabelText(/First name/i), 'New');
+        await userEvent.type(screen.getByLabelText(/Last name/i), 'User');
+        await userEvent.type(screen.getByLabelText(/Job title/i), 'Administrator');
         await userEvent.type(screen.getByLabelText(/Password/i), 'Password123!');
         await userEvent.click(screen.getByRole('button', {name: /^Create$/i}));
 
@@ -63,6 +70,9 @@ describe('components/admin_console/system_users/create_user_modal', () => {
                 {
                     email: 'new.user@example.com',
                     username: 'newuser',
+                    first_name: 'New',
+                    last_name: 'User',
+                    position: 'Administrator',
                     password: 'Password123!',
                 },
                 '',
@@ -74,17 +84,26 @@ describe('components/admin_console/system_users/create_user_modal', () => {
     });
 
     test('should generate a valid password and copy it', async () => {
+        jest.useFakeTimers();
         const copySpy = jest.spyOn(Utils, 'copyToClipboard').mockImplementation(jest.fn());
+        const user = userEvent.setup({advanceTimers: jest.advanceTimersByTime});
 
         renderWithContext(<CreateUserModal {...baseProps}/>);
 
-        await userEvent.click(screen.getByRole('button', {name: /Generate/i}));
+        await user.click(screen.getByRole('button', {name: /Generate/i}));
 
         const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
         expect(passwordInput.value).toHaveLength(16);
 
-        await userEvent.click(screen.getByRole('button', {name: /Copy/i}));
+        await user.click(screen.getByRole('button', {name: /Copy/i}));
 
         expect(copySpy).toHaveBeenCalledWith(passwordInput.value);
+        expect(screen.getByRole('button', {name: /Copied/i})).toBeInTheDocument();
+
+        jest.advanceTimersByTime(5000);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', {name: /Copy/i})).toBeInTheDocument();
+        });
     });
 });

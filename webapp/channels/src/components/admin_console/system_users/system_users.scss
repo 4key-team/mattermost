@@ -97,9 +97,26 @@ table.systemUsersTable {
 .systemUsers__passwordActions {
     display: flex;
     gap: 4px;
+}
 
-    .btn {
-        min-width: 0;
-        white-space: nowrap;
+.systemUsers__passwordAction {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sys-denim-button-bg);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 20px;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+        background: transparent;
+        color: var(--sys-denim-button-bg-hover);
+    }
+
+    &:disabled {
+        color: rgba(var(--sys-center-channel-color-rgb), 0.4);
+        cursor: default;
     }
 }

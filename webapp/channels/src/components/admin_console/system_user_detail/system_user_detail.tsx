@@ -107,6 +107,9 @@ export type Props = PropsFromRedux & RouteComponentProps<Params> & WrappedCompon
 export type State = {
     user?: UserProfile;
     emailField: string;
+    firstNameField: string;
+    lastNameField: string;
+    positionField: string;
     customProfileAttributeFields: UserPropertyField[];
     customProfileAttributeValues: Record<string, string | string[]>;
     originalCpaValues: Record<string, string | string[]>;
@@ -127,6 +130,9 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         super(props);
         this.state = {
             emailField: '',
+            firstNameField: '',
+            lastNameField: '',
+            positionField: '',
             customProfileAttributeFields: [],
             customProfileAttributeValues: {},
             originalCpaValues: {},
@@ -158,6 +164,9 @@ export class SystemUserDetail extends PureComponent<Props, State> {
                 this.setState({
                     user: userResult.data,
                     emailField: userResult.data.email, // Set emailField to the email of the user for editing purposes
+                    firstNameField: userResult.data.first_name || '',
+                    lastNameField: userResult.data.last_name || '',
+                    positionField: userResult.data.position || '',
                     customProfileAttributeValues: cpaValues,
                     originalCpaValues: {...cpaValues}, // Deep copy for change tracking
                     isLoading: false,
@@ -273,15 +282,44 @@ export class SystemUserDetail extends PureComponent<Props, State> {
     };
 
     handleEmailChange = (event: ChangeEvent<HTMLInputElement>) => {
-        if (!this.state.user) {
-            return;
-        }
-
         const {target: {value}} = event;
 
         this.setState({
             emailField: value,
             error: null, // Clear any validation errors when user starts editing
+        }, () => {
+            this.checkForChanges();
+        });
+    };
+
+    handleFirstNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const {target: {value}} = event;
+
+        this.setState({
+            firstNameField: value,
+            error: null,
+        }, () => {
+            this.checkForChanges();
+        });
+    };
+
+    handleLastNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const {target: {value}} = event;
+
+        this.setState({
+            lastNameField: value,
+            error: null,
+        }, () => {
+            this.checkForChanges();
+        });
+    };
+
+    handlePositionChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const {target: {value}} = event;
+
+        this.setState({
+            positionField: value,
+            error: null,
         }, () => {
             this.checkForChanges();
         });
@@ -305,8 +343,11 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         }
 
         const emailChanged = this.state.emailField !== this.state.user.email;
+        const firstNameChanged = this.state.firstNameField !== (this.state.user.first_name || '');
+        const lastNameChanged = this.state.lastNameField !== (this.state.user.last_name || '');
+        const positionChanged = this.state.positionField !== (this.state.user.position || '');
         const cpaChanged = this.hasCpaChanges();
-        const hasChanges = emailChanged || cpaChanged;
+        const hasChanges = emailChanged || firstNameChanged || lastNameChanged || positionChanged || cpaChanged;
 
         this.setState({
             isSaveNeeded: hasChanges,
@@ -487,6 +528,54 @@ export class SystemUserDetail extends PureComponent<Props, State> {
             </label>,
         );
 
+        fields.push(
+            <label key='firstName'>
+                <FormattedMessage
+                    id='admin.userManagement.userDetail.firstName'
+                    defaultMessage='First Name'
+                />
+                <input
+                    className='form-control'
+                    type='text'
+                    value={this.state.firstNameField}
+                    onChange={this.handleFirstNameChange}
+                    disabled={this.state.isSaving || this.state.isLoading}
+                />
+            </label>,
+        );
+
+        fields.push(
+            <label key='lastName'>
+                <FormattedMessage
+                    id='admin.userManagement.userDetail.lastName'
+                    defaultMessage='Last Name'
+                />
+                <input
+                    className='form-control'
+                    type='text'
+                    value={this.state.lastNameField}
+                    onChange={this.handleLastNameChange}
+                    disabled={this.state.isSaving || this.state.isLoading}
+                />
+            </label>,
+        );
+
+        fields.push(
+            <label key='position'>
+                <FormattedMessage
+                    id='admin.userManagement.userDetail.position'
+                    defaultMessage='Job Title'
+                />
+                <input
+                    className='form-control'
+                    type='text'
+                    value={this.state.positionField}
+                    onChange={this.handlePositionChange}
+                    disabled={this.state.isSaving || this.state.isLoading}
+                />
+            </label>,
+        );
+
         // Add CPA fields
         for (const field of sortedCpaFields) {
             fields.push(this.renderCpaField(field));
@@ -525,6 +614,9 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         // Reset all fields to original values
         this.setState({
             emailField: this.state.user?.email || '',
+            firstNameField: this.state.user?.first_name || '',
+            lastNameField: this.state.user?.last_name || '',
+            positionField: this.state.user?.position || '',
             customProfileAttributeValues: {...this.state.originalCpaValues},
             error: null,
             isSaveNeeded: false,
@@ -545,6 +637,10 @@ export class SystemUserDetail extends PureComponent<Props, State> {
 
         // Validate email if changed
         const emailChanged = this.state.user.email !== this.state.emailField;
+        const firstNameChanged = (this.state.user.first_name || '') !== this.state.firstNameField;
+        const lastNameChanged = (this.state.user.last_name || '') !== this.state.lastNameField;
+        const positionChanged = (this.state.user.position || '') !== this.state.positionField;
+        const profileChanged = emailChanged || firstNameChanged || lastNameChanged || positionChanged;
         if (emailChanged && !isEmail(this.state.emailField)) {
             this.setState({error: this.props.intl.formatMessage({id: 'admin.user_item.invalidEmail', defaultMessage: 'Invalid email address'})});
             return;
@@ -585,9 +681,14 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         try {
             const promises = [];
 
-            // Update user profile if email changed
-            if (emailChanged) {
-                const updatedUser = Object.assign({}, this.state.user, {email: this.state.emailField.trim().toLowerCase()});
+            // Update user profile fields if changed
+            if (profileChanged) {
+                const updatedUser = Object.assign({}, this.state.user, {
+                    email: this.state.emailField.trim().toLowerCase(),
+                    first_name: this.state.firstNameField.trim(),
+                    last_name: this.state.lastNameField.trim(),
+                    position: this.state.positionField.trim(),
+                });
                 promises.push(this.props.patchUser(updatedUser));
             }
 
@@ -621,8 +722,8 @@ export class SystemUserDetail extends PureComponent<Props, State> {
             let updatedUser = this.state.user;
             let resultIndex = 0;
 
-            // Handle user update result if email was changed
-            if (emailChanged) {
+            // Handle user update result if profile fields were changed
+            if (profileChanged) {
                 const userResult = results[resultIndex] as ActionResult<UserProfile, ServerError>;
                 if (userResult.data) {
                     updatedUser = userResult.data;
@@ -647,6 +748,9 @@ export class SystemUserDetail extends PureComponent<Props, State> {
             this.setState({
                 user: updatedUser,
                 emailField: updatedUser.email,
+                firstNameField: updatedUser.first_name || '',
+                lastNameField: updatedUser.last_name || '',
+                positionField: updatedUser.position || '',
                 originalCpaValues: {...this.state.customProfileAttributeValues}, // Update original values
                 error: null,
                 isSaving: false,
