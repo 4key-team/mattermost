@@ -97,25 +97,55 @@ table.systemUsersTable {
 .systemUsers__passwordActions {
     display: flex;
     gap: 4px;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.systemUsers__modalInput {
+    .Input.form-control {
+        border: 0 !important;
+        background: transparent;
+        box-shadow: none !important;
+        outline: 0;
+    }
+
+    .Input_fieldset {
+        box-shadow: none;
+    }
+}
+
+.systemUsers__passwordWrapper {
+    gap: 10px;
+
+    > .Input.form-control {
+        min-width: 0;
+    }
 }
 
 .systemUsers__passwordAction {
-    padding: 0;
-    border: 0;
-    background: transparent;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid rgba(var(--sys-center-channel-color-rgb), 0.16);
+    border-radius: 999px;
+    background: rgba(var(--sys-button-bg-rgb), 0.06);
     color: var(--sys-denim-button-bg);
     font-size: 12px;
     font-weight: 600;
-    line-height: 20px;
+    line-height: 26px;
     white-space: nowrap;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 
     &:hover,
     &:focus {
-        background: transparent;
+        border-color: rgba(var(--sys-button-bg-rgb), 0.22);
+        background: rgba(var(--sys-button-bg-rgb), 0.1);
         color: var(--sys-denim-button-bg-hover);
+        outline: 0;
     }
 
     &:disabled {
+        border-color: rgba(var(--sys-center-channel-color-rgb), 0.12);
+        background: rgba(var(--sys-center-channel-color-rgb), 0.04);
         color: rgba(var(--sys-center-channel-color-rgb), 0.4);
         cursor: default;
     }

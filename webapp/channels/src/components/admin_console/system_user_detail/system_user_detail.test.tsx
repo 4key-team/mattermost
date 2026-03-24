@@ -136,6 +136,7 @@ describe('SystemUserDetail', () => {
     test('should update first name, last name and position', async () => {
         const updatedUser = {
             ...user,
+            nickname: 'Neo',
             first_name: 'New',
             last_name: 'Name',
             position: 'Manager',
@@ -153,12 +154,16 @@ describe('SystemUserDetail', () => {
 
         const firstNameInput = screen.getByText('First Name').closest('label')?.querySelector('input');
         const lastNameInput = screen.getByText('Last Name').closest('label')?.querySelector('input');
+        const nicknameInput = screen.getByText('Nickname').closest('label')?.querySelector('input');
         const positionInput = screen.getByText('Job Title').closest('label')?.querySelector('input');
 
         expect(firstNameInput).toBeTruthy();
         expect(lastNameInput).toBeTruthy();
+        expect(nicknameInput).toBeTruthy();
         expect(positionInput).toBeTruthy();
 
+        await userEvent.clear(nicknameInput as HTMLInputElement);
+        await userEvent.type(nicknameInput as HTMLInputElement, 'Neo');
         await userEvent.clear(firstNameInput as HTMLInputElement);
         await userEvent.type(firstNameInput as HTMLInputElement, 'New');
         await userEvent.clear(lastNameInput as HTMLInputElement);
@@ -171,6 +176,7 @@ describe('SystemUserDetail', () => {
             expect(patchUser).toHaveBeenCalledWith(expect.objectContaining({
                 id: user.id,
                 email: user.email,
+                nickname: 'Neo',
                 first_name: 'New',
                 last_name: 'Name',
                 position: 'Manager',

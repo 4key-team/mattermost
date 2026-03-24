@@ -107,6 +107,7 @@ export type Props = PropsFromRedux & RouteComponentProps<Params> & WrappedCompon
 export type State = {
     user?: UserProfile;
     emailField: string;
+    nicknameField: string;
     firstNameField: string;
     lastNameField: string;
     positionField: string;
@@ -130,6 +131,7 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         super(props);
         this.state = {
             emailField: '',
+            nicknameField: '',
             firstNameField: '',
             lastNameField: '',
             positionField: '',
@@ -164,6 +166,7 @@ export class SystemUserDetail extends PureComponent<Props, State> {
                 this.setState({
                     user: userResult.data,
                     emailField: userResult.data.email, // Set emailField to the email of the user for editing purposes
+                    nicknameField: userResult.data.nickname || '',
                     firstNameField: userResult.data.first_name || '',
                     lastNameField: userResult.data.last_name || '',
                     positionField: userResult.data.position || '',
@@ -303,6 +306,17 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         });
     };
 
+    handleNicknameChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const {target: {value}} = event;
+
+        this.setState({
+            nicknameField: value,
+            error: null,
+        }, () => {
+            this.checkForChanges();
+        });
+    };
+
     handleLastNameChange = (event: ChangeEvent<HTMLInputElement>) => {
         const {target: {value}} = event;
 
@@ -343,11 +357,12 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         }
 
         const emailChanged = this.state.emailField !== this.state.user.email;
+        const nicknameChanged = this.state.nicknameField !== (this.state.user.nickname || '');
         const firstNameChanged = this.state.firstNameField !== (this.state.user.first_name || '');
         const lastNameChanged = this.state.lastNameField !== (this.state.user.last_name || '');
         const positionChanged = this.state.positionField !== (this.state.user.position || '');
         const cpaChanged = this.hasCpaChanges();
-        const hasChanges = emailChanged || firstNameChanged || lastNameChanged || positionChanged || cpaChanged;
+        const hasChanges = emailChanged || nicknameChanged || firstNameChanged || lastNameChanged || positionChanged || cpaChanged;
 
         this.setState({
             isSaveNeeded: hasChanges,
@@ -529,6 +544,22 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         );
 
         fields.push(
+            <label key='nickname'>
+                <FormattedMessage
+                    id='admin.userManagement.userDetail.nickname'
+                    defaultMessage='Nickname'
+                />
+                <input
+                    className='form-control'
+                    type='text'
+                    value={this.state.nicknameField}
+                    onChange={this.handleNicknameChange}
+                    disabled={this.state.isSaving || this.state.isLoading}
+                />
+            </label>,
+        );
+
+        fields.push(
             <label key='firstName'>
                 <FormattedMessage
                     id='admin.userManagement.userDetail.firstName'
@@ -614,6 +645,7 @@ export class SystemUserDetail extends PureComponent<Props, State> {
         // Reset all fields to original values
         this.setState({
             emailField: this.state.user?.email || '',
+            nicknameField: this.state.user?.nickname || '',
             firstNameField: this.state.user?.first_name || '',
             lastNameField: this.state.user?.last_name || '',
             positionField: this.state.user?.position || '',
@@ -637,10 +669,11 @@ export class SystemUserDetail extends PureComponent<Props, State> {
 
         // Validate email if changed
         const emailChanged = this.state.user.email !== this.state.emailField;
+        const nicknameChanged = (this.state.user.nickname || '') !== this.state.nicknameField;
         const firstNameChanged = (this.state.user.first_name || '') !== this.state.firstNameField;
         const lastNameChanged = (this.state.user.last_name || '') !== this.state.lastNameField;
         const positionChanged = (this.state.user.position || '') !== this.state.positionField;
-        const profileChanged = emailChanged || firstNameChanged || lastNameChanged || positionChanged;
+        const profileChanged = emailChanged || nicknameChanged || firstNameChanged || lastNameChanged || positionChanged;
         if (emailChanged && !isEmail(this.state.emailField)) {
             this.setState({error: this.props.intl.formatMessage({id: 'admin.user_item.invalidEmail', defaultMessage: 'Invalid email address'})});
             return;
@@ -685,6 +718,7 @@ export class SystemUserDetail extends PureComponent<Props, State> {
             if (profileChanged) {
                 const updatedUser = Object.assign({}, this.state.user, {
                     email: this.state.emailField.trim().toLowerCase(),
+                    nickname: this.state.nicknameField.trim(),
                     first_name: this.state.firstNameField.trim(),
                     last_name: this.state.lastNameField.trim(),
                     position: this.state.positionField.trim(),
@@ -748,6 +782,7 @@ export class SystemUserDetail extends PureComponent<Props, State> {
             this.setState({
                 user: updatedUser,
                 emailField: updatedUser.email,
+                nicknameField: updatedUser.nickname || '',
                 firstNameField: updatedUser.first_name || '',
                 lastNameField: updatedUser.last_name || '',
                 positionField: updatedUser.position || '',

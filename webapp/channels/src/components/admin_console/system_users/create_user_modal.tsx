@@ -223,6 +223,7 @@ export default function CreateUserModal({
                     type='email'
                     name='email'
                     autoComplete='off'
+                    containerClassName='systemUsers__modalInput'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.email',
                         defaultMessage: 'Email',
@@ -242,6 +243,7 @@ export default function CreateUserModal({
                     type='text'
                     name='username'
                     autoComplete='off'
+                    containerClassName='systemUsers__modalInput'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.username',
                         defaultMessage: 'Username',
@@ -259,6 +261,7 @@ export default function CreateUserModal({
                     type='text'
                     name='first_name'
                     autoComplete='off'
+                    containerClassName='systemUsers__modalInput'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.first_name',
                         defaultMessage: 'First name',
@@ -275,6 +278,7 @@ export default function CreateUserModal({
                     type='text'
                     name='last_name'
                     autoComplete='off'
+                    containerClassName='systemUsers__modalInput'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.last_name',
                         defaultMessage: 'Last name',
@@ -291,6 +295,7 @@ export default function CreateUserModal({
                     type='text'
                     name='position'
                     autoComplete='off'
+                    containerClassName='systemUsers__modalInput'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.position',
                         defaultMessage: 'Job title',
@@ -308,6 +313,8 @@ export default function CreateUserModal({
                     type='password'
                     name='password'
                     autoComplete='new-password'
+                    containerClassName='systemUsers__modalInput'
+                    wrapperClassName='systemUsers__passwordWrapper'
                     label={formatMessage({
                         id: 'admin.system_users.create_user.password',
                         defaultMessage: 'Password',
