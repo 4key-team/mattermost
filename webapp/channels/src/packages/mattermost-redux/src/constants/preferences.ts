@@ -142,7 +142,7 @@ const Preferences = {
             codeTheme: 'github',
         },
         lagoon: {
-            type: 'Lagoon',
+            type: 'custom',
             sidebarBg: '#0b4d78',
             sidebarText: '#ffffff',
             sidebarUnreadText: '#ffffff',

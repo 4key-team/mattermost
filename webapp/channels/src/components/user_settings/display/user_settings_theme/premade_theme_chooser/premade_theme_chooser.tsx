@@ -28,9 +28,10 @@ const PremadeThemeChooser = ({theme, updateTheme, allowedThemes = []}: Props) =>
             }
 
             const premadeTheme: Theme = Object.assign({}, Preferences.THEMES[k as ThemeKey]);
+            const themeName = k === 'lagoon' ? 'Lagoon' : premadeTheme.type;
 
             let activeClass = '';
-            if (premadeTheme.type === theme.type) {
+            if ((k === 'lagoon' && theme.sidebarBg === premadeTheme.sidebarBg) || premadeTheme.type === theme.type) {
                 activeClass = 'active';
             }
 
@@ -40,14 +41,14 @@ const PremadeThemeChooser = ({theme, updateTheme, allowedThemes = []}: Props) =>
                     key={'premade-theme-key' + k}
                 >
                     <button
-                        id={`premadeTheme${premadeTheme.type?.replace(' ', '')}`}
+                        id={`premadeTheme${themeName?.replace(' ', '')}`}
                         className={`premadeThemeButton ${activeClass}`}
                         onClick={() => updateTheme(premadeTheme)}
                     >
                         <label>
                             <ThemeThumbnail
                                 themeKey={k}
-                                themeName={premadeTheme.type}
+                                themeName={themeName}
                                 sidebarBg={premadeTheme.sidebarBg}
                                 sidebarText={changeOpacity(premadeTheme.sidebarText, 0.48)}
                                 sidebarUnreadText={premadeTheme.sidebarUnreadText}
@@ -59,7 +60,7 @@ const PremadeThemeChooser = ({theme, updateTheme, allowedThemes = []}: Props) =>
                                 newMessageSeparator={premadeTheme.newMessageSeparator}
                                 buttonBg={premadeTheme.buttonBg}
                             />
-                            <div className='theme-label'>{toTitleCase(premadeTheme.type || '')}</div>
+                            <div className='theme-label'>{toTitleCase(themeName || '')}</div>
                         </label>
                     </button>
                 </div>,
