@@ -1086,6 +1086,7 @@
   "admin.experimental.defaultTheme.desc": "Set a default theme that applies to all new users on the system.",
   "admin.experimental.defaultTheme.options.denim": "Denim",
   "admin.experimental.defaultTheme.options.indigo": "Indigo",
+  "admin.experimental.defaultTheme.options.lagoon": "Lagoon",
   "admin.experimental.defaultTheme.options.onyx": "Onyx",
   "admin.experimental.defaultTheme.options.quartz": "Quartz",
   "admin.experimental.defaultTheme.options.sapphire": "Sapphire",
