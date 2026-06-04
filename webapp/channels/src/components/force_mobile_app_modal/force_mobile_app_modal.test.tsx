@@ -9,7 +9,7 @@ import {renderWithContext} from 'tests/react_testing_utils';
 import ForceMobileAppModal, {IOS_APP_STORE_LINK, ANDROID_PLAY_STORE_LINK} from './force_mobile_app_modal';
 
 describe('ForceMobileAppModal', () => {
-    test('renders both store links and no close control', () => {
+    test('renders both store links, a copy button, and no close control', () => {
         renderWithContext(<ForceMobileAppModal/>);
 
         const ios = screen.getByRole('link', {name: /app store/i});
@@ -17,6 +17,11 @@ describe('ForceMobileAppModal', () => {
 
         expect(ios).toHaveAttribute('href', IOS_APP_STORE_LINK);
         expect(android).toHaveAttribute('href', ANDROID_PLAY_STORE_LINK);
+
+        // Step-by-step instructions include a copy-to-clipboard control.
+        expect(screen.getByRole('button', {name: /copy/i})).toBeInTheDocument();
+
+        // It is a hard block: there is no close/dismiss button.
         expect(screen.queryByRole('button', {name: /close/i})).not.toBeInTheDocument();
     });
 });

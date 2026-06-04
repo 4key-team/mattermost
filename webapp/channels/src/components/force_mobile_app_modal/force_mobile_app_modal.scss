@@ -7,53 +7,143 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: rgba(0, 0, 0, 0.85);
+    overflow-y: auto;
+
+    // Fully opaque so the chat is never visible behind the block.
+    background: var(--center-channel-bg, #ffffff);
     inset: 0;
 
     &__card {
-        max-width: 420px;
-        padding: 32px;
-        border-radius: 12px;
-        background: var(--center-channel-bg, #fff);
+        width: 100%;
+        max-width: 460px;
+        padding: 8px 12px 24px;
         color: var(--center-channel-color, #3d3c40);
         text-align: center;
     }
 
     &__title {
-        margin-bottom: 16px;
-        font-size: 22px;
-        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.25;
     }
 
-    &__text {
-        margin-bottom: 8px;
-    }
-
-    &__server {
+    &__intro {
         margin-bottom: 24px;
-        font-family: monospace;
+        color: rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.75);
+        font-size: 15px;
+    }
+
+    &__steps {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        text-align: left;
+    }
+
+    &__step {
+        padding: 16px 0;
+
+        & + & {
+            border-top: 1px solid rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.12);
+        }
+    }
+
+    &__stepTitle {
+        margin-bottom: 12px;
+        font-size: 16px;
         font-weight: 600;
-        word-break: break-all;
+    }
+
+    &__stepBody {
+        color: rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.85);
+        font-size: 14px;
     }
 
     &__links {
         display: flex;
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: 12px;
     }
 
+    // Store buttons: black badge style, white icon + white text (always readable).
     &__store {
-        display: inline-block;
-        padding: 12px 16px;
-        border-radius: 8px;
-        background: var(--button-bg, #1c58d9);
-        color: var(--button-color, #fff);
-        font-weight: 600;
+        display: inline-flex;
+        min-width: 180px;
+        align-items: center;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: #000000;
+        color: #ffffff !important;
+        gap: 10px;
         text-decoration: none;
 
-        &:hover {
+        &:hover,
+        &:focus {
+            background: #1a1a1a;
+            color: #ffffff !important;
             text-decoration: none;
+        }
+    }
+
+    &__storeIcon {
+        flex: 0 0 auto;
+        color: #ffffff;
+    }
+
+    &__storeText {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+        text-align: left;
+    }
+
+    &__storeSmall {
+        font-size: 11px;
+        opacity: 0.9;
+    }
+
+    &__storeBig {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    &__urlRow {
+        display: flex;
+        align-items: stretch;
+        margin-top: 8px;
+        gap: 8px;
+    }
+
+    &__url {
+        flex: 1 1 auto;
+        padding: 10px 12px;
+        border: 1px solid rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.2);
+        border-radius: 8px;
+        background: rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.04);
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-all;
+    }
+
+    &__copy {
+        flex: 0 0 auto;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: var(--button-bg, #1c58d9);
+        color: var(--button-color, #ffffff);
+        font-weight: 600;
+        white-space: nowrap;
+
+        &:hover {
             opacity: 0.9;
         }
+    }
+
+    &__hint {
+        margin: 12px 0 0;
+        color: rgba(var(--center-channel-color-rgb, 61, 60, 64), 0.65);
+        font-size: 13px;
     }
 }
