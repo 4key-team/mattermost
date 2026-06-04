@@ -10,6 +10,7 @@ import * as GlobalActions from 'actions/global_actions';
 import * as WebSocketActions from 'actions/websocket_actions.jsx';
 import BrowserStore from 'stores/browser_store';
 
+import ForceMobileAppGate from 'components/force_mobile_app_modal';
 import LoadingScreen from 'components/loading_screen';
 
 import WebSocketClient from 'client/web_websocket_client';
@@ -144,7 +145,12 @@ export default class LoggedIn extends React.PureComponent<Props> {
             }
         }
 
-        return this.props.children;
+        return (
+            <>
+                {this.props.children}
+                <ForceMobileAppGate/>
+            </>
+        );
     }
 
     private updateTimeZone(): void {
