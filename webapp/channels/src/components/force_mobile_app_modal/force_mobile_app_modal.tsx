@@ -4,6 +4,8 @@
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
+import ExternalLink from 'components/external_link';
+
 import './force_mobile_app_modal.scss';
 
 export const IOS_APP_STORE_LINK = 'https://apps.apple.com/app/mattermost/id1257222717';
@@ -33,28 +35,26 @@ const ForceMobileAppModal = () => {
                 </p>
                 <p className='ForceMobileAppModal__server'>{serverUrl}</p>
                 <div className='ForceMobileAppModal__links'>
-                    <a
+                    <ExternalLink
                         className='ForceMobileAppModal__store'
                         href={IOS_APP_STORE_LINK}
-                        target='_blank'
-                        rel='noopener noreferrer'
+                        location='force_mobile_app_modal'
                     >
                         <FormattedMessage
                             id='force_mobile_app.appStore'
                             defaultMessage='Download on the App Store'
                         />
-                    </a>
-                    <a
+                    </ExternalLink>
+                    <ExternalLink
                         className='ForceMobileAppModal__store'
                         href={ANDROID_PLAY_STORE_LINK}
-                        target='_blank'
-                        rel='noopener noreferrer'
+                        location='force_mobile_app_modal'
                     >
                         <FormattedMessage
                             id='force_mobile_app.googlePlay'
                             defaultMessage='Get it on Google Play'
                         />
-                    </a>
+                    </ExternalLink>
                 </div>
             </div>
         </div>
