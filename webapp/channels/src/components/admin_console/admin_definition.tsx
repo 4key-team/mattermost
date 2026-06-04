@@ -2330,6 +2330,13 @@ const AdminDefinition: AdminDefinitionType = {
                             isDisabled: it.not(it.userHasWritePermissionOnResource(RESOURCE_KEYS.SITE.CUSTOMIZATION)),
                         },
                         {
+                            type: 'bool',
+                            key: 'ServiceSettings.ForceMobileApp',
+                            label: defineMessage({id: 'admin.customization.forceMobileAppTitle', defaultMessage: 'Force Mobile App (block web for non-admins): '}),
+                            help_text: defineMessage({id: 'admin.customization.forceMobileAppDesc', defaultMessage: 'When true, non-admin users opening the web client (browser or desktop app) are shown a full-screen prompt to download and use the mobile app, and cannot access chat from the web. System admins are unaffected.'}),
+                            isDisabled: it.not(it.userHasWritePermissionOnResource(RESOURCE_KEYS.SITE.CUSTOMIZATION)),
+                        },
+                        {
                             type: 'custom',
                             component: BrandImageSetting,
                             key: 'CustomBrandImage',
