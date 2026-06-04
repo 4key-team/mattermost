@@ -70,6 +70,7 @@ export type ClientConfig = {
     EnableDeveloper: string;
     EnableDiagnostics: string;
     EnableDesktopLandingPage: 'true' | 'false';
+    ForceMobileApp: 'true' | 'false';
     EnableEmailBatching: string;
     EnableEmailInvitations: string;
     EnableEmojiPicker: string;
@@ -428,6 +429,7 @@ export type ServiceSettings = {
     MaximumPayloadSizeBytes: number;
     EnableAPIPostDeletion: boolean;
     EnableDesktopLandingPage: boolean;
+    ForceMobileApp: boolean;
     MaximumURLLength: number;
     ScheduledPosts: boolean;
     EnableWebHubChannelIteration: boolean;
