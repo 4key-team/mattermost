@@ -1,0 +1,59 @@
+.ForceMobileAppModal {
+    position: fixed;
+    z-index: 10000;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.85);
+    inset: 0;
+
+    &__card {
+        max-width: 420px;
+        padding: 32px;
+        border-radius: 12px;
+        background: var(--center-channel-bg, #fff);
+        color: var(--center-channel-color, #3d3c40);
+        text-align: center;
+    }
+
+    &__title {
+        margin-bottom: 16px;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    &__text {
+        margin-bottom: 8px;
+    }
+
+    &__server {
+        margin-bottom: 24px;
+        font-family: monospace;
+        font-weight: 600;
+        word-break: break-all;
+    }
+
+    &__links {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__store {
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: var(--button-bg, #1c58d9);
+        color: var(--button-color, #fff);
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: none;
+            opacity: 0.9;
+        }
+    }
+}
