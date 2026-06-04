@@ -686,3 +686,12 @@ func TestGetLimitedClientConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateClientConfigForceMobileApp(t *testing.T) {
+	c := &model.Config{}
+	c.SetDefaults()
+	c.ServiceSettings.ForceMobileApp = model.NewPointer(true)
+
+	props := GenerateClientConfig(c, "", nil)
+	assert.Equal(t, "true", props["ForceMobileApp"])
+}
