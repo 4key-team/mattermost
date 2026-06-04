@@ -416,6 +416,7 @@ type ServiceSettings struct {
 	EnableAPIUserDeletion                             *bool
 	EnableAPIPostDeletion                             *bool
 	EnableDesktopLandingPage                          *bool
+	ForceMobileApp                                    *bool `access:"site_customization"`
 	ExperimentalEnableHardenedMode                    *bool `access:"experimental_features"`
 	ExperimentalStrictCSRFEnforcement                 *bool `access:"experimental_features,write_restrictable,cloud_restrictable"`
 	EnableEmailInvitations                            *bool `access:"authentication_signup"`
@@ -873,6 +874,10 @@ func (s *ServiceSettings) SetDefaults(isUpdate bool) {
 
 	if s.EnableDesktopLandingPage == nil {
 		s.EnableDesktopLandingPage = NewPointer(true)
+	}
+
+	if s.ForceMobileApp == nil {
+		s.ForceMobileApp = NewPointer(false)
 	}
 
 	if s.EnableSVGs == nil {

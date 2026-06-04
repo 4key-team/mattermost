@@ -2755,3 +2755,10 @@ func TestAutoTranslationSettingsIsValid(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceSettingsForceMobileAppDefault(t *testing.T) {
+	s := ServiceSettings{}
+	s.SetDefaults(false)
+	require.NotNil(t, s.ForceMobileApp)
+	require.False(t, *s.ForceMobileApp)
+}
